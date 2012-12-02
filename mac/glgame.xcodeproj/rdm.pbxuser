@@ -1,0 +1,256 @@
+// !$*UTF8*$!
+{
+	08FB7793FE84155DC02AAC07 /* Project object */ = {
+		activeBuildConfigurationName = Debug;
+		activeExecutable = 41F75EC9129528F80043DE77 /* glgame */;
+		activeTarget = 8DD76F620486A84900D96B5E /* glgame */;
+		addToTargets = (
+		);
+		breakpoints = (
+			414A200B147BB3600048F655 /* gl.cpp:574 */,
+		);
+		codeSenseManager = 41F75EE2129529140043DE77 /* Code sense */;
+		executables = (
+			41F75EC9129528F80043DE77 /* glgame */,
+		);
+		perUserDictionary = {
+			PBXConfiguration.PBXFileTableDataSource3.PBXFileTableDataSource = {
+				PBXFileTableDataSourceColumnSortingDirectionKey = "-1";
+				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
+				PBXFileTableDataSourceColumnWidthsKey = (
+					20,
+					900,
+					20,
+					48,
+					43,
+					43,
+					20,
+				);
+				PBXFileTableDataSourceColumnsKey = (
+					PBXFileDataSource_FiletypeID,
+					PBXFileDataSource_Filename_ColumnID,
+					PBXFileDataSource_Built_ColumnID,
+					PBXFileDataSource_ObjectSize_ColumnID,
+					PBXFileDataSource_Errors_ColumnID,
+					PBXFileDataSource_Warnings_ColumnID,
+					PBXFileDataSource_Target_ColumnID,
+				);
+			};
+			PBXPerProjectTemplateStateSaveDate = 371367656;
+			PBXWorkspaceStateSaveDate = 371367656;
+		};
+		perUserProjectItems = {
+			410FAA1B16221B3600197255 /* PBXTextBookmark */ = 410FAA1B16221B3600197255 /* PBXTextBookmark */;
+			410FAA1C16221B3600197255 /* PBXTextBookmark */ = 410FAA1C16221B3600197255 /* PBXTextBookmark */;
+			410FAA1D16221B3600197255 /* PBXTextBookmark */ = 410FAA1D16221B3600197255 /* PBXTextBookmark */;
+			41D6A9B3144FF29100D40C24 /* PBXTextBookmark */ = 41D6A9B3144FF29100D40C24 /* PBXTextBookmark */;
+			41D72FD116229EF900FFAE5A /* PBXTextBookmark */ = 41D72FD116229EF900FFAE5A /* PBXTextBookmark */;
+			41D72FD216229EF900FFAE5A /* PBXTextBookmark */ = 41D72FD216229EF900FFAE5A /* PBXTextBookmark */;
+			41D72FD316229EF900FFAE5A /* PBXTextBookmark */ = 41D72FD316229EF900FFAE5A /* PBXTextBookmark */;
+			41D72FD816229EF900FFAE5A /* PBXTextBookmark */ = 41D72FD816229EF900FFAE5A /* PBXTextBookmark */;
+		};
+		sourceControlManager = 41F75EE1129529140043DE77 /* Source Control */;
+		userBuildSettings = {
+		};
+	};
+	410FA9B816220ED200197255 /* conf.h */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1078, 706}}";
+			sepNavSelRange = "{36, 0}";
+			sepNavVisRange = "{0, 388}";
+		};
+	};
+	410FA9B916220ED200197255 /* gl.cpp */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1078, 8172}}";
+			sepNavSelRange = "{6114, 0}";
+			sepNavVisRange = "{5674, 1111}";
+		};
+	};
+	410FA9BA16220ED200197255 /* gl.h */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1078, 2525}}";
+			sepNavSelRange = "{1322, 13}";
+			sepNavVisRange = "{952, 901}";
+			sepNavWindowFrame = "{{15, 239}, {994, 784}}";
+		};
+	};
+	410FA9BB16220ED200197255 /* glgame.cpp */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1078, 1282}}";
+			sepNavSelRange = "{1247, 0}";
+			sepNavVisRange = "{549, 1165}";
+		};
+	};
+	410FA9BC16220ED200197255 /* util.h */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1078, 4298}}";
+			sepNavSelRange = "{0, 34}";
+			sepNavVisRange = "{0, 1207}";
+		};
+	};
+	410FA9F31622114D00197255 /* shaders.h */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1006, 2211}}";
+			sepNavSelRange = "{2138, 0}";
+			sepNavVisRange = "{1776, 826}";
+		};
+	};
+	410FAA1B16221B3600197255 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 410FA9BC16220ED200197255 /* util.h */;
+		name = "util.h: 1";
+		rLen = 34;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 1207;
+		vrLoc = 0;
+	};
+	410FAA1C16221B3600197255 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 410FA9BA16220ED200197255 /* gl.h */;
+		name = "gl.h: 54";
+		rLen = 13;
+		rLoc = 1322;
+		rType = 0;
+		vrLen = 901;
+		vrLoc = 952;
+	};
+	410FAA1D16221B3600197255 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 410FA9F31622114D00197255 /* shaders.h */;
+		name = "shaders.h: 155";
+		rLen = 0;
+		rLoc = 5444;
+		rType = 0;
+		vrLen = 1916;
+		vrLoc = 3581;
+	};
+	414A200B147BB3600048F655 /* gl.cpp:574 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = 410FA9B916220ED200197255 /* gl.cpp */;
+		functionName = "CGL::keyOperations( void )";
+		hitCount = 0;
+		ignoreCount = 0;
+		lineNumber = 574;
+		location = glgame;
+		modificationTime = 370947479.710121;
+		originalNumberOfMultipleMatches = 1;
+		state = 1;
+	};
+	41B8A506144CD32D0061B95A /* time.h */ = {
+		isa = PBXFileReference;
+		lastKnownFileType = sourcecode.c.h;
+		name = time.h;
+		path = /Developer/SDKs/MacOSX10.6.sdk/usr/include/time.h;
+		sourceTree = "<absolute>";
+	};
+	41D6A9B3144FF29100D40C24 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 41B8A506144CD32D0061B95A /* time.h */;
+		name = "time.h: 133";
+		rLen = 0;
+		rLoc = 5058;
+		rType = 0;
+		vrLen = 543;
+		vrLoc = 0;
+	};
+	41D72FD116229EF900FFAE5A /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 410FA9B916220ED200197255 /* gl.cpp */;
+		name = "gl.cpp: 253";
+		rLen = 0;
+		rLoc = 6114;
+		rType = 0;
+		vrLen = 1111;
+		vrLoc = 5674;
+	};
+	41D72FD216229EF900FFAE5A /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 410FA9B816220ED200197255 /* conf.h */;
+		name = "conf.h: 4";
+		rLen = 0;
+		rLoc = 36;
+		rType = 0;
+		vrLen = 388;
+		vrLoc = 0;
+	};
+	41D72FD316229EF900FFAE5A /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 410FA9BB16220ED200197255 /* glgame.cpp */;
+		name = "glgame.cpp: 68";
+		rLen = 0;
+		rLoc = 1247;
+		rType = 0;
+		vrLen = 1164;
+		vrLoc = 550;
+	};
+	41D72FD816229EF900FFAE5A /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 410FA9BB16220ED200197255 /* glgame.cpp */;
+		name = "glgame.cpp: 68";
+		rLen = 0;
+		rLoc = 1247;
+		rType = 0;
+		vrLen = 1165;
+		vrLoc = 549;
+	};
+	41F75EC9129528F80043DE77 /* glgame */ = {
+		isa = PBXExecutable;
+		activeArgIndices = (
+		);
+		argumentStrings = (
+		);
+		autoAttachOnCrash = 1;
+		breakpointsEnabled = 0;
+		configStateDict = {
+		};
+		customDataFormattersEnabled = 1;
+		dataTipCustomDataFormattersEnabled = 1;
+		dataTipShowTypeColumn = 1;
+		dataTipSortType = 0;
+		debuggerPlugin = GDBDebugging;
+		disassemblyDisplayState = 0;
+		dylibVariantSuffix = "";
+		enableDebugStr = 0;
+		environmentEntries = (
+		);
+		executableSystemSymbolLevel = 0;
+		executableUserSymbolLevel = 0;
+		libgmallocEnabled = 0;
+		name = glgame;
+		savedGlobals = {
+		};
+		showTypeColumn = 0;
+		sourceDirectories = (
+		);
+		variableFormatDictionary = {
+		};
+	};
+	41F75EE1129529140043DE77 /* Source Control */ = {
+		isa = PBXSourceControlManager;
+		fallbackIsa = XCSourceControlManager;
+		isSCMEnabled = 0;
+		scmConfiguration = {
+			repositoryNamesForRoots = {
+				"" = "";
+			};
+		};
+	};
+	41F75EE2129529140043DE77 /* Code sense */ = {
+		isa = PBXCodeSenseManager;
+		indexTemplatePath = "";
+	};
+	8DD76F620486A84900D96B5E /* glgame */ = {
+		activeExec = 0;
+		executables = (
+			41F75EC9129528F80043DE77 /* glgame */,
+		);
+	};
+}
