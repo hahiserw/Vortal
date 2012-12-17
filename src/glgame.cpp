@@ -73,9 +73,9 @@ int main(int argc, char* argv[]) {
 	// dodatkowe zrodlo swiatla przemieszczane za pomoca myszy
 	cgl.state_list.push_back( STATE_SCENE_LIGHT );
 
-	cgl.state_list.push_back( STATE_DRAW_BOARD );
+	//cgl.state_list.push_back( STATE_DRAW_BOARD );
 	
-	//cgl.state_list.push_back( STATE_DRAW_OBSTACLES );
+	cgl.state_list.push_back( STATE_DRAW_OBSTACLES );
 	//@ Odpalamy stan zmiany zmiennej
 	//cgl.state_list.push_back( STATE_MOVE_HEAD );
 	// rysowanie szescianu
@@ -91,5 +91,3 @@ int main(int argc, char* argv[]) {
 
 	return 0;
 }
-
-

@@ -21,7 +21,10 @@ using namespace std;
 #include "shaders.h"
 #include "util.h"
 #include "gl.h"
+
 #include "Obstacle.h"
+#include "Cube.h"
+#include "Shoot.h"
 
 //#define ASE
 
@@ -108,6 +111,11 @@ void CGL::init( void ) {
 
 	map_w = board_w;
 	map_h = board_h;
+
+	// Kostka
+	//Cube * cube = new Cube( 1.5f, 0.0f, 0.5f, 0.5f );
+	Obstacle * cube = new Obstacle( 1.5f, 0.0f, 0.5f, 0.5f );
+	objects_list.push_front( cube );
 	
 }
 
@@ -137,6 +145,13 @@ void CGL::display( void ) {
 	
 	
 	glPushMatrix();
+
+	/*
+	glTranslatef( 0.0f, 0.0f, 0.6f ); // Wysokoœæ kamery
+	glRotatef( -30, 1.0f, 0.0f, 0.0f );
+	glRotatef( -rotation, 0.0f, 0.0f, 1.0f );
+	glTranslatef( -transX, -transY, 0.0f );
+	*/
 	
 #ifdef SHADERS
 	if( flag_phong ) {
@@ -156,6 +171,9 @@ void CGL::display( void ) {
 	
 	list<Obstacle*> objects = objects_list;
 	list<Obstacle*>::iterator object_it;
+
+	list<Shoot*> shoots = shoots_list;
+	list<Shoot*>::iterator shoot_it;
 	
 	for( state = states.begin(); state != states.end(); ++state) {
 	
@@ -182,15 +200,43 @@ void CGL::display( void ) {
 			case STATE_DRAW_OBSTACLES:
 				draw_obstacles();
 				break;
+
+			case STATE_CARRYING_CUBE:
+				//cube->moveTo( moveX, moveY );
+				break;
 			
 			case STATE_MOVE_FORWARD:
 			case STATE_MOVE_BACKWARD:
+				collision = false;
 				moveY_change = moveY_value * ( now - moveF_time_start ) / ( moveF_time_end - moveF_time_start );
-				moveX_change = moveX_value * ( now - moveF_time_start ) / ( moveF_time_end - moveF_time_start );
-				if( now > moveF_time_end ) {
+				moveX_change = moveX_value * ( now - moveF_time_start ) / ( moveF_time_end - moveF_time_start );//*
+				for( object_it = objects.begin(); object_it != objects.end(); object_it++ ) {
+					//if( obiekt_za_daleko_od_gracza )
+					//	continue;
+					collisionY = false;
+					collisionX = false;
+					if( moveX_start + moveX_change + playerW/2.0f > (*object_it)->getX()
+						&& (*object_it)->getX() + (*object_it)->getWidth() > moveX_start + moveX_change - playerW/2.0f )
+						collisionX = true;
+					if( moveY_start + moveY_change + playerH/2.0f > (*object_it)->getY()
+						&& (*object_it)->getY() + (*object_it)->getHeight() > moveY_start + moveY_change - playerH/2.0f )
+						collisionY = true;
+					if( collisionX && collisionY )
+						collision = true;
+				}//*/
+				if( !collision ) {
+					moveX = moveX_start + moveX_change;
+					moveY = moveY_start + moveY_change;
+				}
+				if( changeX ) {
+					//cout << "LOL" << endl;
+					cube->moveTo( moveX, moveY );
+					//cube->setX( moveX );
+					//cube->setY( moveY );
+				}
+				if( collision || now > moveF_time_end ) {
 					state_list.remove( STATE_MOVE_FORWARD );
 					state_list.remove( STATE_MOVE_BACKWARD );
-					//state_list.remove( STATE_CHECK_COLLISION );
 				}
 				break;
 			
@@ -206,6 +252,7 @@ void CGL::display( void ) {
 				break;
 			
 			case STATE_CHECK_COLLISION:
+				break;
 				collision = false;/*
 				for( object_it = objects.begin(); object_it != objects.end(); object_it++ ) {
 					//if( obiekt_za_daleko_od_gracza )
@@ -222,8 +269,8 @@ void CGL::display( void ) {
 				x = board_w * ( moveX + map_w/2 ) / (map_w-1);
 				y = board_h * ( moveY + map_h/2 ) / (map_h-1);
 				//gy = y * block_size - range - (float)block_size/2.0f;
-				//if( board[y][x] )
-				//	collision = true;
+				if( board[y][x] )
+					collision = true;
 				//cout << x << ", " << y << " | " << moveX << ", " << moveY << endl;
 				
 				cout << endl;
@@ -239,6 +286,10 @@ void CGL::display( void ) {
 					moveY = moveY_start + moveY_change;
 				//if( collision )
 				//	state_list.remove( STATE_CHECK_COLLISION );
+				break;
+
+			case STATE_FIRE:
+				fire( now );
 				break;
 				
 			case STATE_TEXTURE:
@@ -576,6 +627,7 @@ void CGL::draw_board( void ) {
 	
 }
 
+
 void CGL::draw_obstacles() {
 	
 	list<Obstacle*> objects = objects_list;
@@ -583,11 +635,14 @@ void CGL::draw_obstacles() {
 
 	float col[4] = { 0.1f, 0.1f, 0.8f, 0.03f };
 	glMaterialfv( GL_FRONT, GL_DIFFUSE, col);
-	//glPushMatrix();
-	//glScalef( 10, 6, 10 );
 	for( object_it = objects.begin(); object_it != objects.end(); object_it++ )
 		(*object_it)->draw();
-	//glPopMatrix();
+}
+
+void CGL::fire( float time ) {
+	
+	//
+
 }
 
 
@@ -622,7 +677,7 @@ void CGL::keyOperations( void ) {
 			state_list.remove( STATE_CHANGE_ROTATION_RIGHT );
 			state_list.push_front( STATE_CHANGE_ROTATION_LEFT );
 			rotateY_start = rotateY;
-			rotateY_value = 20;
+			rotateY_value = 30;
 			rotateY_time_start = getTime();
 			rotateY_time_end = rotateY_time_start + 100;
 		}
@@ -633,7 +688,7 @@ void CGL::keyOperations( void ) {
 			state_list.remove( STATE_CHANGE_ROTATION_LEFT );
 			state_list.push_front( STATE_CHANGE_ROTATION_RIGHT );
 			rotateY_start = rotateY;
-			rotateY_value = 20;
+			rotateY_value = 30;
 			rotateY_time_start = getTime();
 			rotateY_time_end = rotateY_time_start + 100;
 		}
@@ -657,7 +712,13 @@ void CGL::keyOperations( void ) {
 	
 	if ( keyStates['p'] ) {
 		flag_phong = !flag_phong;
-	}		
+	}
+
+	if( keyStates[' '] ) {
+		if( !findState( STATE_FIRE ) ) {
+			state_list.push_front( STATE_FIRE );
+		}
+	}
 	
 	if( keyStates['w'] ) {
 		if( !findState( STATE_MOVE_FORWARD ) ) {
@@ -669,7 +730,6 @@ void CGL::keyOperations( void ) {
 			moveY_value = sin( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f;
 			moveF_time_start = getTime();
 			moveF_time_end = moveF_time_start + 100;
-			move = true;
 		}
 	}		
 	
@@ -683,7 +743,6 @@ void CGL::keyOperations( void ) {
 			moveY_value = sin( ( M_PI * rotateY ) / 180.0f - M_PI/2 ) * 0.3f;
 			moveF_time_start = getTime();
 			moveF_time_end = moveF_time_start + 100;
-			move = true;
 		}
 	}		
 	
@@ -697,9 +756,8 @@ void CGL::keyOperations( void ) {
 			moveY_value = sin( ( M_PI * rotateY ) / 180.0f + M_PI ) * 0.3f;
 			moveS_time_start = getTime();
 			moveS_time_end = moveS_time_start + 100;
-			move = true;
 		}
-	}		
+	}
 	
 	if( keyStates['d'] ) {
 		if( !findState( STATE_MOVE_RIGHT ) ) {
@@ -711,14 +769,23 @@ void CGL::keyOperations( void ) {
 			moveY_value = sin( ( M_PI * rotateY ) / 180.0f ) * 0.3f;
 			moveS_time_start = getTime();
 			moveS_time_end = moveS_time_start + 100;
-			move = true;
-		}
+			}
 	}
 
-	if( move && !findState( STATE_CHECK_COLLISION ) ) {
-		cgl.state_list.push_front( STATE_CHECK_COLLISION );
-		move = false;
+	if( keyStates['f'] ) {
+		carry_time_start = getTime();
+		if( carry_time_start < carry_time_end )
+			return;
+		changeX = !changeX;
+		/*
+		if( !findState( STATE_CARRYING_CUBE ) ) {
+			state_list.push_front( STATE_CARRYING_CUBE );
+		} else {
+			state_list.remove( STATE_CARRYING_CUBE );
+		}//*/
+		carry_time_end = carry_time_start + 200;
 	}
+
 
 	//if( keyStates[']'] ) {
 	//}
@@ -821,8 +888,8 @@ void CGL::board_to_obstacles( int ** board )
 	for( int y = 0; y < board_h; y++ )
 		for( int x = 0; x < board_w; x++ )
 			if( board[y][x] ) {
-				gx = x * block_size - range - (float)block_size/2.0f;
-				gy = y * block_size - range - (float)block_size/2.0f;
+				gx = x * block_size - range * block_size - block_size;
+				gy = y * block_size - range * block_size - block_size;
 				Obstacle * object = new Obstacle( gx, gy, block_size, block_size );
 				cgl.objects_list.push_back( object );
 			}

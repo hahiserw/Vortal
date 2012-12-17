@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <list>
-//#include "Obstacle.h"
 
 using namespace std;
 
@@ -24,6 +23,8 @@ static float colorGray[] = {0.4f,0.4f,0.4f};
 static float colorBlack[] = { 0.0f, 0.0f, 0.0f };
 
 class Obstacle;
+class Cube;
+class Shoot;
 
 class CGL {
 
@@ -32,6 +33,9 @@ public:
 
 	list<int> state_list;
 	list<Obstacle*> objects_list;
+	list<Shoot*> shoots_list;
+
+	Obstacle * cube;
 
 	int board_w;
 	int board_h;
@@ -52,6 +56,9 @@ public:
 	float moveY_start, moveY_value, moveY_change;
 	float moveX_start, moveX_value, moveX_change;
 	float range;
+
+	float carry_time_start;
+	float carry_time_end;
 	
 	/** Obs³uga myszy */
 	float translateX;
@@ -71,6 +78,7 @@ public:
 	float headX;
 	bool changeX;
 	float moveX, moveY;
+	float playerW, playerH;
 	bool move;
 	bool collision;
 	bool collisionX;
@@ -97,6 +105,7 @@ public:
 		
 		state_list.clear();
 		objects_list.clear();
+		shoots_list.clear();
 
 		rotateY = 0.0f;
 		texture = 1;
@@ -116,6 +125,8 @@ public:
 		changeX = false;
 		moveX = 0;
 		moveY = 0;
+		playerW = 0.5;
+		playerH = 0.5;
 		range = 5;
 		move = false;
 		collision = false;
@@ -151,6 +162,7 @@ public:
 	void create_obstacle( float, float, float, float );
 	void draw_obstacles( /*list<Obstacle*> &, list<Obstacle*>::iterator &*/ );
 	void board_to_obstacles( int ** );
+	void fire( float );
 
 	void info( char * );
 
