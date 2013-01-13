@@ -11,10 +11,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\Button.h" />
     <ClInclude Include="..\src\conf.h" />
+    <ClInclude Include="..\src\Cube.h" />
+    <ClInclude Include="..\src\ExitDoor.h" />
     <ClInclude Include="..\src\gl.h" />
     <ClInclude Include="..\src\Obstacle.h" />
     <ClInclude Include="..\src\shaders.h" />
+    <ClInclude Include="..\src\Shoot.h" />
     <ClInclude Include="..\src\util.h" />
   </ItemGroup>
   <ItemGroup>
