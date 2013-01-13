@@ -25,6 +25,8 @@ static float colorBlack[] = { 0.0f, 0.0f, 0.0f };
 class Obstacle;
 class Cube;
 class Shoot;
+class ExitDoor;
+class Button;
 
 class CGL {
 
@@ -33,9 +35,10 @@ public:
 
 	list<int> state_list;
 	list<Obstacle*> objects_list;
+	list<Obstacle*> carryableItems_list;
 	list<Shoot*> shoots_list;
-
-	Obstacle * cube;
+	
+	Obstacle * closeItem;
 
 	int board_w;
 	int board_h;
@@ -76,7 +79,7 @@ public:
 
 	//@ Dodajemy sobie zmienne odpowiadaj¹ce za animacje
 	float headX;
-	bool changeX;
+	bool carrying;
 	float moveX, moveY;
 	float playerW, playerH;
 	bool move;
@@ -87,7 +90,7 @@ public:
 
 	GLuint shaderprogram;
 
-	int** board;
+	char ** board;
 	
 	bool* keyStates; // bufor klawiatury
 
@@ -105,6 +108,7 @@ public:
 		
 		state_list.clear();
 		objects_list.clear();
+		carryableItems_list.clear();
 		shoots_list.clear();
 
 		rotateY = 0.0f;
@@ -122,7 +126,7 @@ public:
 
 		//@ Inicjujemy nasze zmienne :D
 		headX = 0;
-		changeX = false;
+		carrying = false;
 		moveX = 0;
 		moveY = 0;
 		playerW = 0.5;
@@ -132,6 +136,8 @@ public:
 		collision = false;
 		collisionX = false;
 		collisionY = false;
+
+		closeItem = NULL;
 		
 		keyStates = new bool[256]; // Stany dla wszyskich klawiszy
 		for(int i=0;i<256;i++)
@@ -160,15 +166,16 @@ public:
 	void draw_teapot( float angle );
 	void draw_cube_texture( float angle );
 	void create_obstacle( float, float, float, float );
-	void draw_obstacles( /*list<Obstacle*> &, list<Obstacle*>::iterator &*/ );
-	void board_to_obstacles( int ** );
+	void draw_obstacles();
+	void board_to_obstacles( char ** );
 	void fire( float );
+	void moveCarryingItem();
 
 	void info( char * );
 
 	/** Odczytanie danych planszy gry z pliku 
 	 */
-	int** read_board( void );
+	char** read_board( void );
 	
 	/** Rysowanie planszy gry
 	 */

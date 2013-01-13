@@ -25,6 +25,8 @@ using namespace std;
 #include "Obstacle.h"
 #include "Cube.h"
 #include "Shoot.h"
+#include "ExitDoor.h"
+#include "Button.h"
 
 //#define ASE
 
@@ -83,10 +85,10 @@ void CGL::init( void ) {
 	
 
 #ifndef MAC
-	// wczytywanie tekstury z pliku dyskowego
+	/*/ wczytywanie tekstury z pliku dyskowego
 	BITMAPINFOHEADER bitmapInfoHeader;
 	
-	unsigned char* bitmap_data = CUTIL::LoadBitmapFile( "tex.bmp", &bitmapInfoHeader ); 
+	unsigned char* bitmap_data = CUTIL::LoadBitmainput( "tex.bmp", &bitmapInfoHeader ); 
 	
 	if( bitmap_data != NULL ) {
 		glBindTexture(GL_TEXTURE_2D, texture);
@@ -96,7 +98,7 @@ void CGL::init( void ) {
 					 bitmapInfoHeader.biHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, bitmap_data);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 		glEnable(GL_TEXTURE_2D);
-	}
+	}//*/
 #endif
 	
 	// wczytanie obiektu ASE z pliku dyskowego
@@ -112,10 +114,10 @@ void CGL::init( void ) {
 	map_w = board_w;
 	map_h = board_h;
 
-	// Kostka
-	//Cube * cube = new Cube( 1.5f, 0.0f, 0.5f, 0.5f );
-	Obstacle * cube = new Obstacle( 1.5f, 0.0f, 0.5f, 0.5f );
-	objects_list.push_front( cube );
+
+	// Ustawienie pozycji startowyc w parsowaniu mapy. D:
+	//moveX = ;
+	//moveY = ;
 	
 }
 
@@ -163,7 +165,7 @@ void CGL::display( void ) {
 	}
 #endif
 	
-				int x, y;
+	//int x, y;
 	
 	// glowna petla obslugujaca stany gry
 	list<int> states = state_list;
@@ -187,14 +189,6 @@ void CGL::display( void ) {
 				
 			case STATE_DRAW_CLOWN:
 				draw_clown( headX );
-				break;
-
-			case STATE_MOVE_HEAD:
-				// Dodajemy lub odejmujemy od naszej zmiennej w zale¿noœci od 'trybu'
-				headX += changeX? 0.06: -0.06;
-				// Je¿eli zmienna wychodzi poza zakres
-				if( headX > 0.5 || headX < -0.5 )
-					changeX = !changeX;
 				break;
 
 			case STATE_DRAW_OBSTACLES:
@@ -227,13 +221,17 @@ void CGL::display( void ) {
 				if( !collision ) {
 					moveX = moveX_start + moveX_change;
 					moveY = moveY_start + moveY_change;
+				}/*
+				glPushMatrix();
+				glTranslatef( moveX + moveX_value * 2, moveY + moveY_value * 2, 0 );
+				glutSolidCube( 0.1f );
+				glPopMatrix();*/
+				// Je¿eli niesiemy kostkê, to rysuj j¹ przed graczem.
+				if( carrying ) {
+					moveCarryingItem();
 				}
-				if( changeX ) {
-					//cout << "LOL" << endl;
-					cube->moveTo( moveX, moveY );
-					//cube->setX( moveX );
-					//cube->setY( moveY );
-				}
+				// Sprawdzanie, czy kostka, b¹dŸ gracz nie znajduje siê na przycisku.
+				//if(  ) ;
 				if( collision || now > moveF_time_end ) {
 					state_list.remove( STATE_MOVE_FORWARD );
 					state_list.remove( STATE_MOVE_BACKWARD );
@@ -252,40 +250,6 @@ void CGL::display( void ) {
 				break;
 			
 			case STATE_CHECK_COLLISION:
-				break;
-				collision = false;/*
-				for( object_it = objects.begin(); object_it != objects.end(); object_it++ ) {
-					//if( obiekt_za_daleko_od_gracza )
-					//	continue;
-					collisionY = false;
-					collisionX = false;
-					if( moveX > (*object_it)->getX() && (*object_it)->getX() + (*object_it)->getWidth() > moveX )
-						collisionX = true;
-					if( moveY > (*object_it)->getY() && (*object_it)->getY() + (*object_it)->getHeight() > moveY )
-						collisionY = true;
-					if( collisionX && collisionY )
-						collision = true;
-				}//*/
-				x = board_w * ( moveX + map_w/2 ) / (map_w-1);
-				y = board_h * ( moveY + map_h/2 ) / (map_h-1);
-				//gy = y * block_size - range - (float)block_size/2.0f;
-				if( board[y][x] )
-					collision = true;
-				//cout << x << ", " << y << " | " << moveX << ", " << moveY << endl;
-				
-				cout << endl;
-				cout << board[y+1][x-1] << board[y+1][x] << board[y+1][x+1] << endl;
-				cout << board[y  ][x-1] << board[y  ][x] << board[y  ][x+1] << endl;
-				cout << board[y-1][x-1] << board[y-1][x] << board[y-1][x+1] << endl;
-				
-				//cout << "pos: " << moveX << ", " << moveY
-				//	<< " collision: " << collisionX << ", " << collisionY << endl;
-				if( !collision /*&& -range < moveX_change + moveX_start && moveX_change + moveX_start < range*/ )
-					moveX = moveX_start + moveX_change;
-				if( !collision /*&& -range < moveY_change + moveY_start && moveY_change + moveY_start < range*/ )
-					moveY = moveY_start + moveY_change;
-				//if( collision )
-				//	state_list.remove( STATE_CHECK_COLLISION );
 				break;
 
 			case STATE_FIRE:
@@ -319,6 +283,9 @@ void CGL::display( void ) {
 				if( rotateY < 0.0f )
 					rotateY = rotateY + 360.0f;
 				
+				if( carrying )
+					moveCarryingItem();
+
 				if ( now > rotateY_time_end ) {
 					state_list.remove( STATE_CHANGE_ROTATION_RIGHT );
 				}
@@ -331,6 +298,9 @@ void CGL::display( void ) {
 				
 				if( rotateY >= 360.0f )
 					rotateY = 0.0f;
+				
+				if( carrying )
+					moveCarryingItem();
 				
 				if ( now > rotateY_time_end ) {
 					state_list.remove( STATE_CHANGE_ROTATION_LEFT );
@@ -385,6 +355,13 @@ void CGL::display( void ) {
 	glutPostRedisplay(); 
 }
 
+void CGL::moveCarryingItem()
+{
+	closeItem->moveTo(
+		moveX + cos( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f * 2.7f - closeItem->getWidth()/2.0f,
+		moveY + sin( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f * 2.7f - closeItem->getHeight()/2.0f );
+	closeItem->rotate( rotateY );
+}
 
 ///////////////////////////////////////// rysowanie szescianu
 void CGL::draw_cube( void ) {
@@ -614,10 +591,12 @@ void CGL::draw_board( void ) {
 				glPushMatrix();
 				glTranslatef(
 					(float)x / (float)board_w - 0.5f,
-					(float)y / (float)board_h - 0.5f, 0.0f );
+					(float)y / (float)board_h - 0.5f,
+					0.0f );
 				glScalef(
 					1.0f / (float)board_w,
-					1.0f / (float)board_h, 0.4f );
+					1.0f / (float)board_h,
+					0.4f );
 				glutSolidCube( 1.0f );
 				glPopMatrix();	
 			}
@@ -769,14 +748,56 @@ void CGL::keyOperations( void ) {
 			moveY_value = sin( ( M_PI * rotateY ) / 180.0f ) * 0.3f;
 			moveS_time_start = getTime();
 			moveS_time_end = moveS_time_start + 100;
-			}
+		}
 	}
 
+	// Sprawdza czy w pewnym promieniu gracza nie ma jakiegoœ obiektu, który móg³by podnieœæ.
+	// Je¿li jest, to ustaw closeItem na przedmiot i go podnieœ.
 	if( keyStates['f'] ) {
 		carry_time_start = getTime();
 		if( carry_time_start < carry_time_end )
 			return;
-		changeX = !changeX;
+		// Je¿eli kostka nie jest trzymana i znajduje siê w odleg³oœci mnieszej ni¿ 0.5 od bohatera,
+		// to z³ap. Je¿eli kostka jest trzymana i naciœnie sie klawisz to puœæ nie sprawdzaj¹c nic.
+		/*
+		if( !carrying )
+			for( dla ka¿ej przeszkody, któr¹ mo¿na nosiæ )
+				if( przeszkoda nale¿y do pewnego promienia gracza
+					&& przedmiot jest przed graczem ) {
+					closeItem = przeszkoda;
+					carrying = true;
+					break; // Bo nie mo¿e nosiæ dwóch przeszkód na raz
+				}
+		else
+			carrying = false;
+		/*/	
+		if( carrying ) {
+			closeItem = NULL;
+			carrying = false;
+		} else {
+			list<Obstacle*> objects = carryableItems_list;
+			list<Obstacle*>::iterator object_it;
+			for( object_it = objects.begin(); object_it != objects.end(); object_it++ )
+				// Jest pole wkadratu, a ma byæ ko³a! I brakuje sprawdzania, czy obiekt jest przed graczem.
+				if( sqrtf( powf( moveX - (*object_it)->getX() - (*object_it)->getWidth()/2.0f, 2.0f )
+					+ powf( moveY - (*object_it)->getY() - (*object_it)->getHeight()/2.0f, 2.0f ) ) < 1
+					&& true ) {
+						cout << "kat( gracz, obiekt ): "
+							<< ( M_PI - atan2f( moveY - (*object_it)->getY(), moveX - (*object_it)->getX() ) ) * 180 / M_PI;
+						cout << " rotateY: " << rotateY << endl;
+					closeItem = *object_it;
+					carrying = true;
+					// Zachowaj aktualny k¹t obrotu i dodaj zmieniany
+					//closeItem->rotationStart( rotateY );
+					closeItem->draw();
+					break;
+				}
+		}
+		/*/
+		if( carrying || !carrying
+			&& abs( moveX - cube->getX() - cube->getWidth()/2.0f ) < 1.0f
+			&& abs( moveY - cube->getY() - cube->getHeight()/2.0f ) < 1.0f )
+			carrying = !carrying; //*/
 		/*
 		if( !findState( STATE_CARRYING_CUBE ) ) {
 			state_list.push_front( STATE_CARRYING_CUBE );
@@ -841,58 +862,104 @@ float CGL::getTime( void ) {
 }
 
 ///////////////////////////////////////// wczytanie struktury planszy gry z pliku
-int** CGL::read_board( void ) {
+char** CGL::read_board( void ) {
 
-	FILE * pFile;
-	pFile = fopen ("board.txt","rt");
+	FILE * input;
+	input = fopen( "board.txt", "rt" );
 	
-	if (pFile == NULL) {
+	if( input == NULL )
 		return NULL;
-	}
 	
 	//int board_w, board_h;
 	
-	fscanf(pFile, "%d,%d\n", &board_w, &board_h );	
+	fscanf( input, "%d,%d\n", &board_w, &board_h );	
 	printf( "board size: %d,%d\n", board_w, board_h );
 
-	int val;
+	char symbol;
 	
-	int** board = new int*[board_h];
+	char** board = new char*[board_h];
 	
-	for (int y = 0; y < board_h; y++) {
+	// Pocz¹tek planszy w pliku jest u góry po lewej, zaœ w grze na dole po lewej.
+	// Temu dla rysowania czytamy y od ty³u.
+	for( int y = 0; y < board_h; y++ ) {
+	//for( int y = board_h-1; y; y-- ) { 
+		board[-y+board_h-1] = new char[board_w];
 		
-		board[y] = new int[board_w];
-		
-		for (int x = 0; x < board_w; x++) {
-			if( fscanf( pFile, "%d,", &val ) == EOF )
+		for( int x = 0; x < board_w; x++ ) {
+			if( fscanf( input, "%c", &symbol ) == EOF )
 				return NULL;
 			
-			board[y][x] = val;
+			board[-y+board_h-1][x] = symbol;
 		}
+		fscanf( input, "%c", &symbol );
 	}	
 
-	fclose (pFile);
+	fclose( input );
 	
 	return board;
 }
 
 void CGL::create_obstacle( float x, float y, float width, float height ) {
-	Obstacle * object = new Obstacle( x, y, width, height );
+	Obstacle * object = new Obstacle( x, y, 0.0f, 1.0f, width, height );
 	cgl.objects_list.push_back( object );
 }
 
-void CGL::board_to_obstacles( int ** board )
+void CGL::board_to_obstacles( char ** board )
 {
+	Obstacle * object;
+	ExitDoor * exitDoor;
+
 	float gx, gy;
 	float block_size = 1.0;
+
+	float buttonX, buttonY;
+
 	for( int y = 0; y < board_h; y++ )
-		for( int x = 0; x < board_w; x++ )
-			if( board[y][x] ) {
-				gx = x * block_size - range * block_size - block_size;
-				gy = y * block_size - range * block_size - block_size;
-				Obstacle * object = new Obstacle( gx, gy, block_size, block_size );
+		for( int x = 0; x < board_w; x++ ) {
+			gx = x * block_size - range * block_size - block_size;
+			gy = y * block_size - range * block_size - block_size;
+			switch( board[y][x] )
+			{
+			case ' ':
+				break;
+			case '#':
+				object = new Obstacle( gx, gy, 0.0f, block_size, block_size, block_size );
 				cgl.objects_list.push_back( object );
+				break;
+			case '^': // Start
+				moveX = gx;
+				moveY = gy;
+				break;
+			case '$': // Koniec
+				exitDoor = new ExitDoor( gx, gy, 0.0f );
+				cgl.objects_list.push_back( exitDoor );
+				break;
+			case '@': // Kostka
+				object = new Cube( gx, gy, 0.0f );
+				objects_list.push_front( object );
+				carryableItems_list.push_front( object );
+			case '%': // Wie(r?)zyczka :x
+				break;
+			case '!': // Przycisk
+				// Je¿eli drzwi bêda wczeœniej w plansz ni¿ przycisk, to wskaŸnik exit nie bêdzie mia³ poprawnej waroœci.
+				buttonX = gx;
+				buttonY = gy;
+			default:
+				// Litera to przycisk, a cyfra to drzwi.
+				// Kostka na przycisku otwiera drzwi.
+				char symbol = board[y][x];
+				/*/ Maksymalnie 9 powi¹zañ // Bedzie inczej, bo tak brzydko.
+				if( 'a' >= symbol && symbol >= 'i' )
+					break;
+				if( '1' >= symbol && symbol >= '9' )
+					break;
+				//*/
+				cout << board[y][x] << "? Nie ogarniam. D:" << endl;
 			}
+		}
+		// Przycisk inicjalizujemy po petli, ale trzba bedzie ladniej to napisac.
+		object = new Button( buttonX, buttonY, 0.0f, exitDoor );
+		objects_list.push_back( object );
 }
 
 
