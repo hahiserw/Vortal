@@ -944,6 +944,7 @@ void CGL::board_to_obstacles( char ** board )
 				// Je¿eli drzwi bêda wczeœniej w plansz ni¿ przycisk, to wskaŸnik exit nie bêdzie mia³ poprawnej waroœci.
 				buttonX = gx;
 				buttonY = gy;
+				break;
 			default:
 				// Litera to przycisk, a cyfra to drzwi.
 				// Kostka na przycisku otwiera drzwi.
