@@ -38,7 +38,8 @@ public:
 	list<Obstacle*> carryableItems_list;
 	list<Shoot*> shoots_list;
 	
-	Obstacle * closeItem;
+	Obstacle *closeItem;
+	Obstacle *obstacle;
 
 	int board_w;
 	int board_h;
@@ -80,6 +81,7 @@ public:
 	//@ Dodajemy sobie zmienne odpowiadaj¹ce za animacje
 	float headX;
 	bool carrying;
+	float carryX, carryY;
 	float moveX, moveY;
 	float playerW, playerH;
 	bool move;

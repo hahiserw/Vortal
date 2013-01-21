@@ -4,10 +4,11 @@
 
 class ExitDoor: public Obstacle
 {
+	bool active;
 public:
 	ExitDoor( float, float, float );
-	void open();
-	void close();
+	void activate();
+	void deactivate();
 };
 
 ExitDoor::ExitDoor( float x, float y, float z )
@@ -19,14 +20,21 @@ ExitDoor::ExitDoor( float x, float y, float z )
 	width = 1;
 	height = 0.9;
 	rotation = 90;
+	active = false;
 }
 
-void ExitDoor::open()
+void ExitDoor::activate()
 {
-	z = -0.999;
+	if( active )
+		return;
+	active = true;
+	x -= 1.2f;
 }
 
-void ExitDoor::close()
+void ExitDoor::deactivate()
 {
-	z = 1;
+	if( !active )
+		return;
+	active = false;
+	x += 1.2f;
 }

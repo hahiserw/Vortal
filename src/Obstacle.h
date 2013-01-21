@@ -11,6 +11,7 @@ protected:
 public:
 	Obstacle() {};
 	Obstacle( float, float, float, float, float, float );
+	virtual ~Obstacle() {};
 	void moveTo( float, float );
 	void rotate( float );
 	float getX() const { return x; }

@@ -40,8 +40,8 @@ void CGL::init( void ) {
 	// ustawienie parametrow kamery 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective( 100, 1, 1, 1000 );
-	gluLookAt( 0, 0, 7, 0, 0, 0, 0, 1, 0 );
+	gluPerspective( 100, 1, 0.1f, 1000 );
+	//gluLookAt( 0, 0, 7, 0, 0, 0, 0, 1, 0 );
 
 	// wyzerowanie transformacji modelu
 	glMatrixMode(GL_MODELVIEW);
@@ -114,11 +114,8 @@ void CGL::init( void ) {
 	map_w = board_w;
 	map_h = board_h;
 
+	Obstacle *obstacle;
 
-	// Ustawienie pozycji startowyc w parsowaniu mapy. D:
-	//moveX = ;
-	//moveY = ;
-	
 }
 
 
@@ -173,9 +170,15 @@ void CGL::display( void ) {
 	
 	list<Obstacle*> objects = objects_list;
 	list<Obstacle*>::iterator object_it;
-
+	
 	list<Shoot*> shoots = shoots_list;
 	list<Shoot*>::iterator shoot_it;
+
+	gluLookAt( moveX, moveY, 1.0f,
+		moveX + cos( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f * 2.7f,
+		moveY + sin( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f * 2.7f,
+		1.0f,
+		0.0f, 0.0f, 1.0f );
 	
 	for( state = states.begin(); state != states.end(); ++state) {
 	
@@ -205,6 +208,7 @@ void CGL::display( void ) {
 				moveY_change = moveY_value * ( now - moveF_time_start ) / ( moveF_time_end - moveF_time_start );
 				moveX_change = moveX_value * ( now - moveF_time_start ) / ( moveF_time_end - moveF_time_start );//*
 				for( object_it = objects.begin(); object_it != objects.end(); object_it++ ) {
+					obstacle = *object_it;
 					//if( obiekt_za_daleko_od_gracza )
 					//	continue;
 					collisionY = false;
@@ -217,6 +221,18 @@ void CGL::display( void ) {
 						collisionY = true;
 					if( collisionX && collisionY )
 						collision = true;
+					// Gracz stoi na przycisku?
+					Button *button = dynamic_cast<Button*>(obstacle);
+					if( button == obstacle && !button->isBlocked() ) {
+						if( moveX_start + moveX_change + playerW/2.0f > button->getX() + 0.1f
+						&& button->getX() + button->getWidth() > moveX_start + moveX_change - playerW/2.0f - 0.1f
+						&& moveY_start + moveY_change + playerH/2.0f > button->getY() + 0.1f
+						&& button->getY() + button->getHeight() > moveY_start + moveY_change - playerH/2.0f - 0.1f )
+							button->activate();
+						else
+							button->deactivate();
+						//collision = false;
+					}
 				}//*/
 				if( !collision ) {
 					moveX = moveX_start + moveX_change;
@@ -226,7 +242,7 @@ void CGL::display( void ) {
 				glTranslatef( moveX + moveX_value * 2, moveY + moveY_value * 2, 0 );
 				glutSolidCube( 0.1f );
 				glPopMatrix();*/
-				// Je¿eli niesiemy kostkê, to rysuj j¹ przed graczem.
+				// Je¿eli niesiemy kostkê, to rysuj j¹ przed graczem i sprawdŸ czy nie ma na niej przycisku
 				if( carrying ) {
 					moveCarryingItem();
 				}
@@ -277,35 +293,23 @@ void CGL::display( void ) {
 				break;
 			
 			case STATE_CHANGE_ROTATION_RIGHT:
-				
-				rotateY = rotateY_start - rotateY_value * ( now - rotateY_time_start ) / ( rotateY_time_end - rotateY_time_start );
-				
+				rotateY = rotateY_start - rotateY_value * ( now - rotateY_time_start ) / ( rotateY_time_end - rotateY_time_start );			
 				if( rotateY < 0.0f )
 					rotateY = rotateY + 360.0f;
-				
 				if( carrying )
 					moveCarryingItem();
-
-				if ( now > rotateY_time_end ) {
+				if ( now > rotateY_time_end )
 					state_list.remove( STATE_CHANGE_ROTATION_RIGHT );
-				}
-				
 				break;
 				
 			case STATE_CHANGE_ROTATION_LEFT:
-				
 				rotateY = rotateY_start + rotateY_value * ( now - rotateY_time_start ) / ( rotateY_time_end - rotateY_time_start );
-				
 				if( rotateY >= 360.0f )
 					rotateY = 0.0f;
-				
 				if( carrying )
 					moveCarryingItem();
-				
-				if ( now > rotateY_time_end ) {
+				if ( now > rotateY_time_end )
 					state_list.remove( STATE_CHANGE_ROTATION_LEFT );
-				}
-				
 				break;	
 				
 				
@@ -357,10 +361,28 @@ void CGL::display( void ) {
 
 void CGL::moveCarryingItem()
 {
-	closeItem->moveTo(
-		moveX + cos( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f * 2.7f - closeItem->getWidth()/2.0f,
-		moveY + sin( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f * 2.7f - closeItem->getHeight()/2.0f );
+	carryX = moveX + cos( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f * 2.7f - closeItem->getWidth()/2.0f;
+	carryY = moveY + sin( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f * 2.7f - closeItem->getHeight()/2.0f;
+	closeItem->moveTo( carryX, carryY );
 	closeItem->rotate( rotateY );
+	// Je¿eli kosta znajduje siê na przycisku, to aktywuj go. W przeciwnym wypadku dezaktywuj.
+	list<Obstacle*> objects_aux = objects_list;
+	list<Obstacle*>::iterator object_aux_it;
+	for( object_aux_it = objects_aux.begin(); object_aux_it != objects_aux.end(); object_aux_it++ ) {
+		obstacle = *object_aux_it;
+		if( Button *button = dynamic_cast<Button*>(obstacle) ) {
+			if( closeItem->getX() > button->getX() - 0.3f
+			&& button->getX() + button->getWidth() > closeItem->getX() - closeItem->getWidth() + 0.3f
+			&& closeItem->getY() > button->getY() - 0.3f
+			&& button->getY() + button->getHeight() > closeItem->getY() - closeItem->getHeight() + 0.3f ) {
+				button->activate();
+				button->block();
+			} else {
+				button->unblock();
+				button->deactivate();
+			}
+		}
+	}
 }
 
 ///////////////////////////////////////// rysowanie szescianu
@@ -778,10 +800,11 @@ void CGL::keyOperations( void ) {
 			list<Obstacle*> objects = carryableItems_list;
 			list<Obstacle*>::iterator object_it;
 			for( object_it = objects.begin(); object_it != objects.end(); object_it++ )
-				// Jest pole wkadratu, a ma byæ ko³a! I brakuje sprawdzania, czy obiekt jest przed graczem.
+				// Je¿eli kostka znajduje siê w promieniu gracza.
+				// Brakuje sprawdzania, czy obiekt jest przed graczem.
 				if( sqrtf( powf( moveX - (*object_it)->getX() - (*object_it)->getWidth()/2.0f, 2.0f )
 					+ powf( moveY - (*object_it)->getY() - (*object_it)->getHeight()/2.0f, 2.0f ) ) < 1
-					&& true ) {
+					&& true /* gracz patrzy na kostkê */ ) {
 						cout << "kat( gracz, obiekt ): "
 							<< ( M_PI - atan2f( moveY - (*object_it)->getY(), moveX - (*object_it)->getX() ) ) * 180 / M_PI;
 						cout << " rotateY: " << rotateY << endl;
@@ -892,7 +915,14 @@ char** CGL::read_board( void ) {
 			board[-y+board_h-1][x] = symbol;
 		}
 		fscanf( input, "%c", &symbol );
-	}	
+	}
+
+	//fscanf( input, "%d\n", &connections )
+	//while( connections-- && !feof( input ) )
+	//	fscanf( input, "%c:%s\n", &callee, &caller );
+	//	callees += callee;
+	//	callers += caller;
+	//parse_connections( callees, callers );
 
 	fclose( input );
 	
@@ -938,28 +968,25 @@ void CGL::board_to_obstacles( char ** board )
 				object = new Cube( gx, gy, 0.0f );
 				objects_list.push_front( object );
 				carryableItems_list.push_front( object );
-			case '%': // Wie(r?)zyczka :x
+			case '%': // Wie¿yczka :x
 				break;
-			case '!': // Przycisk
+			case 'a': // Przycisk
 				// Je¿eli drzwi bêda wczeœniej w plansz ni¿ przycisk, to wskaŸnik exit nie bêdzie mia³ poprawnej waroœci.
 				buttonX = gx;
 				buttonY = gy;
 				break;
 			default:
-				// Litera to przycisk, a cyfra to drzwi.
+				// Litera to przycisk.
 				// Kostka na przycisku otwiera drzwi.
 				char symbol = board[y][x];
-				/*/ Maksymalnie 9 powi¹zañ // Bedzie inczej, bo tak brzydko.
-				if( 'a' >= symbol && symbol >= 'i' )
+				if( 'a' >= symbol && symbol >= 'z' )
+					//
 					break;
-				if( '1' >= symbol && symbol >= '9' )
-					break;
-				//*/
-				cout << board[y][x] << "? Nie ogarniam. D:" << endl;
+				cout << "'" << board[y][x] << "'? Nie ogarniam. D:" << endl;
 			}
 		}
 		// Przycisk inicjalizujemy po petli, ale trzba bedzie ladniej to napisac.
-		object = new Button( buttonX, buttonY, 0.0f, exitDoor );
+		object = new Button( buttonX, buttonY, -0.01f, exitDoor );
 		objects_list.push_back( object );
 }
 
