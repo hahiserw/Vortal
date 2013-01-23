@@ -70,9 +70,12 @@ int main(int argc, char* argv[]) {
 
 	cgl.init();
 	
+	cgl.state_list.push_back( MENU );
+	
 	// dodatkowe zrodlo swiatla przemieszczane za pomoca myszy
 	cgl.state_list.push_back( STATE_SCENE_LIGHT );
-
+	
+	//cgl.state_list.push_back( MOVE_CAMERA );
 	//cgl.state_list.push_back( STATE_DRAW_BOARD );
 	
 	cgl.state_list.push_back( STATE_DRAW_OBSTACLES );
@@ -82,7 +85,6 @@ int main(int argc, char* argv[]) {
 	//cgl.state_list.push_back( STATE_DRAW_CUBE );
 	cgl.state_list.push_back( STATE_DRAW_TEAPOT );
 	//cgl.state_list.push_back( STATE_DRAW_CLOWN );
-
 	
 	// cieniowanie phonga
 	//cgl.state_list.push_back(STATE_SCENE_LIGHT);	

@@ -77,7 +77,7 @@ public:
 	bool flag_specular;
 	bool flag_diffuse;
 	bool flag_phong;
-
+	bool menu;
 	//@ Dodajemy sobie zmienne odpowiadaj¹ce za animacje
 	float headX;
 	bool carrying;
@@ -89,6 +89,7 @@ public:
 	bool collisionX;
 	bool collisionY;
 
+	float camX, camY, camR;
 
 	GLuint shaderprogram;
 
@@ -112,6 +113,8 @@ public:
 		objects_list.clear();
 		carryableItems_list.clear();
 		shoots_list.clear();
+		
+		menu = true;
 
 		rotateY = 0.0f;
 		texture = 1;
@@ -148,7 +151,7 @@ public:
 		
 		
 	}
-
+	bool getM() { return menu; }
 
 	/** Inicjalizacja srodowiska graficznego: wczytanie tekstury, ustawienie kamery i swiatel, wczytanie obiektu ASE. Inicjalizacja
 		odbywa sie tylko raz po uruchomieniu programu.
@@ -173,7 +176,7 @@ public:
 	void fire( float );
 	void moveCarryingItem();
 
-	void info( char * );
+	//void info( char *, int, int );
 
 	/** Odczytanie danych planszy gry z pliku 
 	 */

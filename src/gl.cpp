@@ -16,6 +16,8 @@
 #include <time.h>
 #include <math.h>
 
+//#include <unistd.h>
+
 using namespace std;
 
 #include "shaders.h"
@@ -174,17 +176,46 @@ void CGL::display( void ) {
 	list<Shoot*> shoots = shoots_list;
 	list<Shoot*>::iterator shoot_it;
 
-	gluLookAt( moveX, moveY, 1.0f,
-		moveX + cos( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f * 2.7f,
-		moveY + sin( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f * 2.7f,
-		1.0f,
-		0.0f, 0.0f, 1.0f );
 	
 	for( state = states.begin(); state != states.end(); ++state) {
 	
 	
 		switch( *state ) {
-	
+
+			case MENU:
+				camR = M_PI * ( (int)now % 5000 ) / 2500.0f;// - 1.0f;
+				camX = cos( camR ) * 10.0f;
+				camY = sin( camR ) * 10.0f;
+				gluLookAt( camX, camY, 5.0f,
+					0.0f, 0.0f, 0.0f,
+					0.0f, 0.0f, 1.0f );
+				glPushMatrix();
+				glTranslatef( camX *0.96f, camY*0.96f, 5.05f );
+				glRotatef( 180*camR/M_PI, 0.0f, 0.0f, 1.0f );
+				glScalef( 0.1f, 2.0f, 1.0f );
+				// Teksturka z menu, czy coœ
+				glutSolidCube( 0.2f );
+				glPopMatrix();
+				state_list.remove( STATE_MOVE_FORWARD );
+				state_list.remove( STATE_MOVE_BACKWARD );
+				state_list.remove( STATE_MOVE_LEFT );
+				state_list.remove( STATE_MOVE_RIGHT );
+				state_list.remove( STATE_CHANGE_ROTATION_RIGHT );
+				state_list.remove( STATE_CHANGE_ROTATION_LEFT );
+				break;
+				/*
+			case GAME:
+				if( menu )
+
+				break;*/
+
+			case MOVE_CAMERA:
+				gluLookAt( moveX, moveY, 1.0f,
+					moveX + cos( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f,
+					moveY + sin( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f,
+					1.0f,
+					0.0f, 0.0f, 1.0f );
+				break;
 			// rysowanie szescianu	
 			case STATE_DRAW_CUBE:
 				draw_cube();
@@ -221,7 +252,7 @@ void CGL::display( void ) {
 						collisionY = true;
 					if( collisionX && collisionY )
 						collision = true;
-					// Gracz stoi na przycisku?
+					//* Gracz stoi na przycisku?
 					Button *button = dynamic_cast<Button*>(obstacle);
 					if( button == obstacle && !button->isBlocked() ) {
 						if( moveX_start + moveX_change + playerW/2.0f > button->getX() + 0.1f
@@ -232,7 +263,7 @@ void CGL::display( void ) {
 						else
 							button->deactivate();
 						//collision = false;
-					}
+					}//*/
 				}//*/
 				if( !collision ) {
 					moveX = moveX_start + moveX_change;
@@ -371,6 +402,11 @@ void CGL::moveCarryingItem()
 	for( object_aux_it = objects_aux.begin(); object_aux_it != objects_aux.end(); object_aux_it++ ) {
 		obstacle = *object_aux_it;
 		if( Button *button = dynamic_cast<Button*>(obstacle) ) {
+			// Je¿eli kostka nie jest ko³o przycisku
+			if( sqrtf( powf( moveX - button->getX() - button->getWidth()/2.0f, 2.0f )
+					+ powf( moveY - button->getY() - button->getHeight()/2.0f, 2.0f ) ) > 1.0f )
+					continue;
+			// Cos tu brzydko z lapaniem kostki jest!!!!!!!!!!!!!!!!!!!!!!
 			if( closeItem->getX() > button->getX() - 0.3f
 			&& button->getX() + button->getWidth() > closeItem->getX() - closeItem->getWidth() + 0.3f
 			&& closeItem->getY() > button->getY() - 0.3f
@@ -380,7 +416,7 @@ void CGL::moveCarryingItem()
 			} else {
 				button->unblock();
 				button->deactivate();
-			}
+			} 
 		}
 	}
 }
@@ -670,7 +706,32 @@ void CGL::keyOperations( void ) {
 	
 	
 	if ( keyStates[27] ) {
-		exit(0);
+		carry_time_start = getTime();
+		if( carry_time_start < carry_time_end )
+			return;
+
+		if( menu )
+			exit(0);
+		else {
+			menu = true;
+			state_list.push_front( MENU );
+			state_list.remove( MOVE_CAMERA );
+		}
+		
+		carry_time_end = carry_time_start + 200;
+	}
+
+	if( keyStates[13] ) {
+		carry_time_start = getTime();
+		if( carry_time_start < carry_time_end )
+			return;
+		if( menu ) {
+			state_list.push_front( MOVE_CAMERA );
+			state_list.remove( MENU );
+			menu = false;
+		}
+		
+		carry_time_end = carry_time_start + 200;
 	}
 	
 	if ( keyStates['q'] ) {
@@ -936,13 +997,14 @@ void CGL::create_obstacle( float x, float y, float width, float height ) {
 
 void CGL::board_to_obstacles( char ** board )
 {
-	Obstacle * object;
-	ExitDoor * exitDoor;
+	Obstacle * object, object2;
+	ExitDoor * exitDoor, *exitDoor2;
 
 	float gx, gy;
 	float block_size = 1.0;
-
+	
 	float buttonX, buttonY;
+	float button2X, button2Y;
 
 	for( int y = 0; y < board_h; y++ )
 		for( int x = 0; x < board_w; x++ ) {
@@ -964,6 +1026,10 @@ void CGL::board_to_obstacles( char ** board )
 				exitDoor = new ExitDoor( gx, gy, 0.0f );
 				cgl.objects_list.push_back( exitDoor );
 				break;
+			case '&':
+				exitDoor2 = new ExitDoor( gx, gy, 0.0f );
+				cgl.objects_list.push_back( exitDoor2 );
+				break;
 			case '@': // Kostka
 				object = new Cube( gx, gy, 0.0f );
 				objects_list.push_front( object );
@@ -975,26 +1041,33 @@ void CGL::board_to_obstacles( char ** board )
 				buttonX = gx;
 				buttonY = gy;
 				break;
+			case 'b':
+				button2X = gx;
+				button2Y = gy;
+				break;
 			default:
 				// Litera to przycisk.
-				// Kostka na przycisku otwiera drzwi.
+				/*/ Kostka na przycisku otwiera drzwi.
 				char symbol = board[y][x];
 				if( 'a' >= symbol && symbol >= 'z' )
 					//
-					break;
+					break;*/
 				cout << "'" << board[y][x] << "'? Nie ogarniam. D:" << endl;
 			}
 		}
 		// Przycisk inicjalizujemy po petli, ale trzba bedzie ladniej to napisac.
 		object = new Button( buttonX, buttonY, -0.01f, exitDoor );
 		objects_list.push_back( object );
+		object = new Button( button2X, button2Y, -0.01, exitDoor2 );
+		objects_list.push_back( object );
 }
 
-
-void info( char * text ) {
+/*
+void info( char * text, int x, int y ) {
 	glMaterialfv( GL_FRONT, GL_DIFFUSE, colorDim );
 	glMaterialfv( GL_FRONT, GL_AMBIENT, colorDim );
 	glMaterialfv( GL_FRONT, GL_EMISSION, colorGray );
 	glMaterialfv( GL_FRONT, GL_SPECULAR, colorDim );
-	CUTIL::renderBitmapString( -3, 3, GLUT_BITMAP_HELVETICA_18, text );
+	CUTIL::renderBitmapString( x, y, GLUT_BITMAP_HELVETICA_18, text );
 }
+*/
