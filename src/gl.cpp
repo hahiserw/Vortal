@@ -25,15 +25,35 @@ using namespace std;
 #include "gl.h"
 
 #include "Obstacle.h"
+#include "Block.h"
 #include "Cube.h"
 #include "Shoot.h"
 #include "ExitDoor.h"
 #include "Button.h"
+#include "Portal.h"
+#include "Turrent.h"
 
 //#define ASE
 
-CGL cgl;
+bool NeHeLoadBitmap(LPTSTR szFileName, GLuint &texid)					// Creates Texture From A Bitmap File
+{
+	HBITMAP hBMP;														// Handle Of The Bitmap
+	BITMAP	BMP;														// Bitmap Structure
+	glGenTextures(1, &texid);											// Create The Texture
+	hBMP=(HBITMAP)LoadImage(GetModuleHandle(NULL), szFileName, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_LOADFROMFILE );
+	if (!hBMP)															// Does The Bitmap Exist?
+		return FALSE;													// If Not Return False
+	GetObject(hBMP, sizeof(BMP), &BMP);									// Get The Object
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);								// Pixel Storage Mode (Word Alignment / 4 Bytes)
+	glBindTexture(GL_TEXTURE_2D, texid);								// Bind To The Texture ID
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);	// Linear Min Filter
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);	// Linear Mag Filter
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, BMP.bmWidth, BMP.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, BMP.bmBits);
+	DeleteObject(hBMP);													// Delete The Object
+	return TRUE;														// Loading Was Successful
+}
 
+CGL cgl;
 
 ///////////////////////////////////////// inicjalizacja srodowiska graficznego
 void CGL::init( void ) {
@@ -59,6 +79,7 @@ void CGL::init( void ) {
 	float g_lightPos[4] = { 0.0f, 0.0f, 7.0f, 1.0f };
 	glLightfv(GL_LIGHT0, GL_POSITION, g_lightPos); 
 	GLfloat color[] = { 0.8f, 0.8f, 0.8f };
+	//GLfloat color[] = { 0.2f, 0.2f, 0.2f };
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, color);
 	glLightfv(GL_LIGHT0, GL_AMBIENT, color);
 	glLightfv(GL_LIGHT0, GL_EMISSION, color);
@@ -77,14 +98,14 @@ void CGL::init( void ) {
 	// back-face culling
 	//glEnable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
-
+	/*
 	// inicjalizacja shaderow (cieniowanie Phong'a)
 #ifdef SHADERS
 	shaderprogram = CShader::init();
 	if( shaderprogram > 0 )
 		printf( "shaders initialised\n" );
 #endif	
-	
+	//*/
 
 #ifndef MAC
 	/*/ wczytywanie tekstury z pliku dyskowego
@@ -110,13 +131,19 @@ void CGL::init( void ) {
 	
 	// wczytanie danych planszy gry
 	board = read_board();
-	
 	board_to_obstacles( board );
 
 	map_w = board_w;
 	map_h = board_h;
 
-	Obstacle *obstacle;
+	/*
+	bool test = NeHeLoadBitmap( "floor.bmp", wall );
+
+	if( test )
+		cout << "Zaladowano bitmape" << endl;
+	else
+		cout << "Nie mozna zaladowac bitmapy!" << endl;
+	//*/
 
 }
 
@@ -129,7 +156,7 @@ void CGL::display( void ) {
 	
 	// obsluga klawiatury	
 	keyOperations(); 
-	
+	/*
 #ifdef SHADERS
 	// wywolanie shaderow lub standardego renderera
 	if( flag_phong )
@@ -137,6 +164,7 @@ void CGL::display( void ) {
 	else
 		glUseProgram(0);	
 #endif
+	//*/
 
 	// aktualny czas
 	float now = getTime();
@@ -183,46 +211,23 @@ void CGL::display( void ) {
 		switch( *state ) {
 
 			case MENU:
-				camR = M_PI * ( (int)now % 5000 ) / 2500.0f;// - 1.0f;
-				camX = cos( camR ) * 10.0f;
-				camY = sin( camR ) * 10.0f;
-				gluLookAt( camX, camY, 5.0f,
-					0.0f, 0.0f, 0.0f,
-					0.0f, 0.0f, 1.0f );
-				glPushMatrix();
-				glTranslatef( camX *0.96f, camY*0.96f, 5.05f );
-				glRotatef( 180*camR/M_PI, 0.0f, 0.0f, 1.0f );
-				glScalef( 0.1f, 2.0f, 1.0f );
-				// Teksturka z menu, czy coœ
-				glutSolidCube( 0.2f );
-				glPopMatrix();
-				state_list.remove( STATE_MOVE_FORWARD );
-				state_list.remove( STATE_MOVE_BACKWARD );
-				state_list.remove( STATE_MOVE_LEFT );
-				state_list.remove( STATE_MOVE_RIGHT );
-				state_list.remove( STATE_CHANGE_ROTATION_RIGHT );
-				state_list.remove( STATE_CHANGE_ROTATION_LEFT );
+				renderMenu( now );
 				break;
-				/*
-			case GAME:
-				if( menu )
-
-				break;*/
 
 			case MOVE_CAMERA:
 				gluLookAt( moveX, moveY, 1.0f,
 					moveX + cos( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f,
 					moveY + sin( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f,
-					1.0f,
+					0.95f,
 					0.0f, 0.0f, 1.0f );
 				break;
-			// rysowanie szescianu	
-			case STATE_DRAW_CUBE:
-				draw_cube();
-				break;				
+
+			case HUD:
+				renderHud( now );
+				break;
 				
 			case STATE_DRAW_CLOWN:
-				draw_clown( headX );
+				draw_clown( 0/*( (int)now % 1000 ) / 100*/ );
 				break;
 
 			case STATE_DRAW_OBSTACLES:
@@ -263,7 +268,11 @@ void CGL::display( void ) {
 						else
 							button->deactivate();
 						//collision = false;
-					}//*/
+					}
+					// Oddanie chwili czasu dla wiezyczki by sprawdzila czy nie widzi gracza
+					Turrent *turrent = dynamic_cast<Turrent*>(obstacle);
+					if( turrent == obstacle )
+						turrent->tick( moveX, moveY, now );
 				}//*/
 				if( !collision ) {
 					moveX = moveX_start + moveX_change;
@@ -273,12 +282,14 @@ void CGL::display( void ) {
 				glTranslatef( moveX + moveX_value * 2, moveY + moveY_value * 2, 0 );
 				glutSolidCube( 0.1f );
 				glPopMatrix();*/
-				// Je¿eli niesiemy kostkê, to rysuj j¹ przed graczem i sprawdŸ czy nie ma na niej przycisku
+				// Je¿eli niesiemy kostkê, to rysuj j¹ przed graczem i sprawdŸ czy nie ma pod nia przycisku
 				if( carrying ) {
 					moveCarryingItem();
 				}
-				// Sprawdzanie, czy kostka, b¹dŸ gracz nie znajduje siê na przycisku.
-				//if(  ) ;
+				// Koniec gry?
+				if( endX < moveX && moveX < endX + 0.9f
+				&& endY < moveY && moveY < endY + 0.9f )
+					gameEnd( true );
 				if( collision || now > moveF_time_end ) {
 					state_list.remove( STATE_MOVE_FORWARD );
 					state_list.remove( STATE_MOVE_BACKWARD );
@@ -287,20 +298,11 @@ void CGL::display( void ) {
 			
 			case STATE_MOVE_LEFT:
 			case STATE_MOVE_RIGHT:
-				moveY_change = moveY_value * ( now - moveS_time_start ) / ( moveS_time_end - moveS_time_start );
-				moveX_change = moveX_value * ( now - moveS_time_start ) / ( moveS_time_end - moveS_time_start );
-				if( now > moveS_time_end ) {
 					state_list.remove( STATE_MOVE_LEFT );
 					state_list.remove( STATE_MOVE_RIGHT );
-					//state_list.remove( STATE_CHECK_COLLISION );
-				}
 				break;
 			
 			case STATE_CHECK_COLLISION:
-				break;
-
-			case STATE_FIRE:
-				fire( now );
 				break;
 				
 			case STATE_TEXTURE:
@@ -315,13 +317,6 @@ void CGL::display( void ) {
 				draw_teapot( rotateY );
 				break;				
 				
-			case STATE_ROTATE_CUBE:
-				draw_cube( rotateY );
-				break;
-			
-			case STATE_DRAW_BOARD:
-				draw_board();
-				break;
 			
 			case STATE_CHANGE_ROTATION_RIGHT:
 				rotateY = rotateY_start - rotateY_value * ( now - rotateY_time_start ) / ( rotateY_time_end - rotateY_time_start );			
@@ -348,33 +343,34 @@ void CGL::display( void ) {
 			 (translateX, translateY) - wartosc przesuniecia
 			 */
 			case STATE_SCENE_LIGHT:
-				
+				float g_lightPos[] = { -4.5f, -4.5f, 1.0f, 1.0f };
+				glLightfv(GL_LIGHT1, GL_POSITION, g_lightPos); 
 				glLightfv(GL_LIGHT1, GL_AMBIENT, colorWhite ); // Rozmyte, jak przez chmury
 				glLightfv(GL_LIGHT1, GL_DIFFUSE, colorWhite ); // Jak s³oñce
-				glLightfv(GL_LIGHT1, GL_EMISSION, colorWhite); // Œwiat³o odbite równoczeœnie we wszystkich kierunkach
+				glLightfv(GL_LIGHT1, GL_EMISSION, colorWhite); // Odbite równoczeœnie we wszystkich kierunkach
 				glLightfv(GL_LIGHT1, GL_SPECULAR, colorWhite); // Te¿ punktowe, ale uwzglêdnia odbicia
 				glEnable(GL_LIGHT1);
-	
+				
+				float g_lightPos2[] = { 5.0f, 2.0f, 1.0f, 1.0f };
+				glLightfv(GL_LIGHT2, GL_POSITION, g_lightPos2 ); 
+				glLightfv(GL_LIGHT2, GL_AMBIENT, colorWhite );
+				glLightfv(GL_LIGHT2, GL_DIFFUSE, colorWhite );
+				glLightfv(GL_LIGHT2, GL_EMISSION, colorWhite);
+				glLightfv(GL_LIGHT2, GL_SPECULAR, colorWhite);
+				glEnable(GL_LIGHT2); 
+	/*
 				glPushMatrix();
-				
 				glTranslatef( translateX, translateY, 1.0f);
-				
-				float g_lightPos[4] = { 0.0f, 1.5f, 1.0f, 1.0f };
+				float g_lightPos[] = { 0.0f, 1.5f, 1.0f, 1.0f };
 				glLightfv(GL_LIGHT1, GL_POSITION, g_lightPos); 
-						
-
 				// rysowanie polozenia zrodla swiatla
 				glTranslatef(g_lightPos[0], g_lightPos[1], g_lightPos[2]);
 				glScalef( 0.1f, 0.1f, 0.1f );
-				
-				float color_white[] = { 0.2f, 0.2f, 0.2f };
-				glMaterialfv( GL_FRONT, GL_AMBIENT, color_white);
-				glMaterialfv( GL_FRONT, GL_EMISSION, color_white);
-				
+				float color[] = { 0.2f, 0.2f, 0.2f };
+				glMaterialfv( GL_FRONT, GL_AMBIENT, color );
+				glMaterialfv( GL_FRONT, GL_EMISSION, color );
 				glutSolidSphere(1, 20, 20);
-				
-				glPopMatrix();	
-				
+				glPopMatrix();//*/
 				break;
 
 		}
@@ -390,77 +386,21 @@ void CGL::display( void ) {
 	glutPostRedisplay(); 
 }
 
-void CGL::moveCarryingItem()
-{
-	carryX = moveX + cos( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f * 2.7f - closeItem->getWidth()/2.0f;
-	carryY = moveY + sin( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f * 2.7f - closeItem->getHeight()/2.0f;
-	closeItem->moveTo( carryX, carryY );
-	closeItem->rotate( rotateY );
-	// Je¿eli kosta znajduje siê na przycisku, to aktywuj go. W przeciwnym wypadku dezaktywuj.
-	list<Obstacle*> objects_aux = objects_list;
-	list<Obstacle*>::iterator object_aux_it;
-	for( object_aux_it = objects_aux.begin(); object_aux_it != objects_aux.end(); object_aux_it++ ) {
-		obstacle = *object_aux_it;
-		if( Button *button = dynamic_cast<Button*>(obstacle) ) {
-			// Je¿eli kostka nie jest ko³o przycisku
-			if( sqrtf( powf( moveX - button->getX() - button->getWidth()/2.0f, 2.0f )
-					+ powf( moveY - button->getY() - button->getHeight()/2.0f, 2.0f ) ) > 1.0f )
-					continue;
-			// Cos tu brzydko z lapaniem kostki jest!!!!!!!!!!!!!!!!!!!!!!
-			if( closeItem->getX() > button->getX() - 0.3f
-			&& button->getX() + button->getWidth() > closeItem->getX() - closeItem->getWidth() + 0.3f
-			&& closeItem->getY() > button->getY() - 0.3f
-			&& button->getY() + button->getHeight() > closeItem->getY() - closeItem->getHeight() + 0.3f ) {
-				button->activate();
-				button->block();
-			} else {
-				button->unblock();
-				button->deactivate();
-			} 
-		}
-	}
-}
-
-///////////////////////////////////////// rysowanie szescianu
-void CGL::draw_cube( void ) {
-	
-	// kolor obiektu
-	glMaterialfv( GL_FRONT, GL_DIFFUSE, colorGreen );
-	glMaterialfv( GL_FRONT, GL_AMBIENT, colorDim );
-	glMaterialfv( GL_FRONT, GL_EMISSION, colorDim );
-	glMaterialfv( GL_FRONT, GL_SPECULAR, colorDim );
-	
-	// polozenie i ksztalt obiektu
-	glPushMatrix();
-	
-	glRotatef( 10.0f, 0.0f, 0.0f, 1.0f );
-	glRotatef( 20.0f, 1.0f, 0.0f, 0.0f );
-	glRotatef( -30.0f, 0.0f, 1.0f, 0.0f );
-	
-	glScalef( 0.8f, 0.8f, 0.8f );
-	
-	CUTIL::drawBox();
-	//glutSolidTeapot( 0.7 );
-	//glutSolidSphere( 1.5, 20, 20 );
-	//glutSolidCube(2);
-	
-	glPopMatrix();
-}
-
-
+// Czarny
 void CGL::draw_clown( float headX ) {
 	
-	glPushMatrix();
-
-	glMaterialfv( GL_FRONT, GL_DIFFUSE, colorGreen );
+	//*
 	glMaterialfv( GL_FRONT, GL_AMBIENT, colorDim );
 	glMaterialfv( GL_FRONT, GL_EMISSION, colorDim );
-	glMaterialfv( GL_FRONT, GL_SPECULAR, colorDim );
+	glMaterialfv( GL_FRONT, GL_DIFFUSE, shadowColor );
+	glMaterialfv( GL_FRONT, GL_SPECULAR, colorDim ); // odbicie
+	
+	glPushMatrix();
 
-	glTranslatef( moveX, moveY, 0 );
+	glTranslatef( moveX, moveY, 0.5f );
 	glRotatef( rotateY, 0, 0, 1 );
 	glRotatef( 90, 1, 0, 0 );
-	glScalef( 0.1, 0.1, 0.1 );
+	glScalef( 0.1, 0.1, 0.03 );
 
 	// G³owa :D
 	glPushMatrix();
@@ -545,29 +485,6 @@ void CGL::draw_cube_texture( float angle ) {
 	glBindTexture( GL_TEXTURE_2D, 0 );
 }
 
-///////////////////////////////////////// rysowanie szescianu
-void CGL::draw_cube( float angle ) {
-
-	// kolor obiektu
-	glMaterialfv( GL_FRONT, GL_DIFFUSE, colorGreen );
-	glMaterialfv( GL_FRONT, GL_AMBIENT, colorDim );
-	glMaterialfv( GL_FRONT, GL_EMISSION, colorDim );
-	glMaterialfv( GL_FRONT, GL_SPECULAR, colorDim );
-
-	// polozenie i ksztalt obiektu
-	glPushMatrix();
-	
-	glRotatef( 10.0f, 0.0f, 0.0f, 1.0f );
-	glRotatef( 20.0f, 1.0f, 0.0f, 0.0f );
-	glRotatef( angle, 0.0f, 1.0f, 0.0f );
-	
-	glScalef( 2.0f, 2.0f, 2.0f );
-
-	CUTIL::drawBox();
-	
-	glPopMatrix();
-}
-
 ///////////////////////////////////////// rysowanie czajnika
 void CGL::draw_teapot( float angle ) {
 	
@@ -616,73 +533,6 @@ void CGL::draw_teapot( float angle ) {
 	glPopMatrix();
 }
 
-///////////////////////////////////////// rysowanie planszy
-void CGL::draw_board( void ) {
-		
-	glPushMatrix();
-	
-	glMaterialfv( GL_FRONT, GL_DIFFUSE, colorBlack );
-	glMaterialfv( GL_FRONT, GL_AMBIENT, colorDim );
-	glMaterialfv( GL_FRONT, GL_EMISSION, colorDim );
-	glMaterialfv( GL_FRONT, GL_SPECULAR, colorDim );
-
-	glTranslatef( 0.0f, 0.0f, -1.0f );
-	glScalef( board_w, board_h, 0.1f );
-	glutSolidCube( 1.0f );
-	
-	glPopMatrix();
-	
-	if (board == NULL) {
-		printf( "ERROR: cannot read the BOARD data.\n" );
-		return;
-	}
-
-	float col[4] = { 0.1f, 1.0f, 0.1f, 1.0f };
-	glMaterialfv( GL_FRONT, GL_DIFFUSE, col);
-	
-	glPushMatrix();
-	glScalef( map_w, map_h, 1.0f );
-
-	for (int y = 0; y < board_h; y++) {
-		for (int x = 0; x < board_w; x++) {
-			if (board[y][x] == 1) {
-				glPushMatrix();
-				glTranslatef(
-					(float)x / (float)board_w - 0.5f,
-					(float)y / (float)board_h - 0.5f,
-					0.0f );
-				glScalef(
-					1.0f / (float)board_w,
-					1.0f / (float)board_h,
-					0.4f );
-				glutSolidCube( 1.0f );
-				glPopMatrix();	
-			}
-		}
-	}
-	glPopMatrix();
-	
-}
-
-
-void CGL::draw_obstacles() {
-	
-	list<Obstacle*> objects = objects_list;
-	list<Obstacle*>::iterator object_it;
-
-	float col[4] = { 0.1f, 0.1f, 0.8f, 0.03f };
-	glMaterialfv( GL_FRONT, GL_DIFFUSE, col);
-	for( object_it = objects.begin(); object_it != objects.end(); object_it++ )
-		(*object_it)->draw();
-}
-
-void CGL::fire( float time ) {
-	
-	//
-
-}
-
-
 ///////////////////////////////////////// IDLE
 void CGL::idle( void ) {
 
@@ -695,15 +545,11 @@ void CGL::keyboardUp( unsigned char key,int a,int b ) {
 	keyStates[key] = false;
 }
 
-
 void CGL::keyboardPress( unsigned char key,int a,int b ) {
-
 	keyStates[key] = true;
 }
 
-	
 void CGL::keyOperations( void ) {	
-	
 	
 	if ( keyStates[27] ) {
 		carry_time_start = getTime();
@@ -712,11 +558,8 @@ void CGL::keyOperations( void ) {
 
 		if( menu )
 			exit(0);
-		else {
-			menu = true;
-			state_list.push_front( MENU );
-			state_list.remove( MOVE_CAMERA );
-		}
+		else
+			gameEnd( false );
 		
 		carry_time_end = carry_time_start + 200;
 	}
@@ -725,16 +568,13 @@ void CGL::keyOperations( void ) {
 		carry_time_start = getTime();
 		if( carry_time_start < carry_time_end )
 			return;
-		if( menu ) {
-			state_list.push_front( MOVE_CAMERA );
-			state_list.remove( MENU );
-			menu = false;
-		}
+		if( menu ) // Gramy!
+			gameStart();
 		
 		carry_time_end = carry_time_start + 200;
 	}
 	
-	if ( keyStates['q'] ) {
+	if ( keyStates['a'] ) { //q
 		if (!findState(STATE_CHANGE_ROTATION_LEFT)) {
 			state_list.remove( STATE_CHANGE_ROTATION_RIGHT );
 			state_list.push_front( STATE_CHANGE_ROTATION_LEFT );
@@ -745,7 +585,7 @@ void CGL::keyOperations( void ) {
 		}
 	}	
 	
-	if ( keyStates['e'] ) {
+	if ( keyStates['d'] ) { //e
 		if (!findState(STATE_CHANGE_ROTATION_RIGHT)) {
 			state_list.remove( STATE_CHANGE_ROTATION_LEFT );
 			state_list.push_front( STATE_CHANGE_ROTATION_RIGHT );
@@ -763,6 +603,9 @@ void CGL::keyOperations( void ) {
 	if ( keyStates['x'] ) {
 		cameraX = cameraX + 0.1;
 	}
+
+	if( keyStates['l'] )
+		gameEnd( true );
 	/*
 	if ( keyStates['s'] ) {
 		flag_specular = !flag_specular;
@@ -770,11 +613,39 @@ void CGL::keyOperations( void ) {
 	
 	if ( keyStates['d'] ) {
 		flag_diffuse = !flag_diffuse;
-	}//*/
+	}///
 	
 	if ( keyStates['p'] ) {
 		flag_phong = !flag_phong;
+	}//*/
+	
+	/*
+	if( keyStates['q'] ) {
+		fire_time_start = getTime();
+		if( fire_time_start < fire_time_end )
+			return;
+		if( portalA ) {
+			objects_list.remove( portalA );
+			delete portalA;
+		}
+		portalA = new Portal( moveX, moveY, 0, portalB );
+		objects_list.push_back( portalA );
+		fire_time_end = fire_time_start + 100;
 	}
+	
+	if( keyStates['e'] ) {
+		fire_time_start = getTime();
+		if( fire_time_start < fire_time_end )
+			return;
+		if( portalB ) {
+			objects_list.remove( portalB );
+			delete portalB;
+		}
+		portalA = new Portal( moveX, moveY, 0, portalA );
+		objects_list.push_back( portalB );
+		fire_time_end = fire_time_start + 100;
+	}
+	//*/
 
 	if( keyStates[' '] ) {
 		if( !findState( STATE_FIRE ) ) {
@@ -807,7 +678,7 @@ void CGL::keyOperations( void ) {
 			moveF_time_end = moveF_time_start + 100;
 		}
 	}		
-	
+	/*
 	if( keyStates['a'] ) {
 		if( !findState( STATE_MOVE_LEFT ) ) {
 			state_list.remove( STATE_MOVE_RIGHT );
@@ -832,7 +703,7 @@ void CGL::keyOperations( void ) {
 			moveS_time_start = getTime();
 			moveS_time_end = moveS_time_start + 100;
 		}
-	}
+	}//*/
 
 	// Sprawdza czy w pewnym promieniu gracza nie ma jakiegoœ obiektu, który móg³by podnieœæ.
 	// Je¿li jest, to ustaw closeItem na przedmiot i go podnieœ.
@@ -866,9 +737,10 @@ void CGL::keyOperations( void ) {
 				if( sqrtf( powf( moveX - (*object_it)->getX() - (*object_it)->getWidth()/2.0f, 2.0f )
 					+ powf( moveY - (*object_it)->getY() - (*object_it)->getHeight()/2.0f, 2.0f ) ) < 1
 					&& true /* gracz patrzy na kostkê */ ) {
-						cout << "kat( gracz, obiekt ): "
-							<< ( M_PI - atan2f( moveY - (*object_it)->getY(), moveX - (*object_it)->getX() ) ) * 180 / M_PI;
-						cout << " rotateY: " << rotateY << endl;
+						// Nie ogarniam tych katow...
+					//	cout << "kat( gracz, obiekt ): "
+					//		<< ( M_PI - atan2f( moveY - (*object_it)->getY(), moveX - (*object_it)->getX() ) ) * 180 / M_PI;
+					//	cout << " rotateY: " << rotateY << endl;
 					closeItem = *object_it;
 					carrying = true;
 					// Zachowaj aktualny k¹t obrotu i dodaj zmieniany
@@ -990,15 +862,74 @@ char** CGL::read_board( void ) {
 	return board;
 }
 
-void CGL::create_obstacle( float x, float y, float width, float height ) {
-	Obstacle * object = new Obstacle( x, y, 0.0f, 1.0f, width, height );
-	cgl.objects_list.push_back( object );
+/////////////////////////////////////////
+
+void CGL::drawText( float x, float y, float z, char *text )
+{
+	char *textp = text;
+	glPushMatrix();
+	glTranslatef( 0, 0, z );
+	glRasterPos2f( x, y );
+	while( *textp++ )
+	//for( int i = 0, len = strlen( text ); i < len; i++ )
+		glutBitmapCharacter( GLUT_BITMAP_HELVETICA_18, *textp );
+		//glutStrokeCharacter( GLUT_BITMAP_HELVETICA_18, *textp );
+	glPopMatrix();
+}
+
+void CGL::moveCarryingItem()
+{
+	carryX = moveX + cos( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f * 2.7f - closeItem->getWidth()/2.0f;
+	carryY = moveY + sin( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f * 2.7f - closeItem->getHeight()/2.0f;
+	closeItem->moveTo( carryX, carryY );
+	closeItem->rotate( rotateY );
+	// Je¿eli kosta znajduje siê na przycisku, to aktywuj go. W przeciwnym wypadku dezaktywuj.
+	list<Obstacle*> objects_aux = objects_list;
+	list<Obstacle*>::iterator object_aux_it;
+	for( object_aux_it = objects_aux.begin(); object_aux_it != objects_aux.end(); object_aux_it++ ) {
+		obstacle = *object_aux_it;
+		if( Button *button = dynamic_cast<Button*>(obstacle) ) {
+			// Je¿eli kostka nie jest ko³o przycisku
+			if( sqrtf( powf( moveX - button->getX() - button->getWidth()/2.0f, 2.0f )
+					+ powf( moveY - button->getY() - button->getHeight()/2.0f, 2.0f ) ) > 1.0f )
+					continue;
+			if( closeItem->getX() > button->getX() - 0.3f
+			&& button->getX() + button->getWidth() > closeItem->getX() - closeItem->getWidth() + 0.3f
+			&& closeItem->getY() > button->getY() - 0.3f
+			&& button->getY() + button->getHeight() > closeItem->getY() - closeItem->getHeight() + 0.3f ) {
+				button->activate();
+				button->block();
+			} else {
+				button->unblock();
+				button->deactivate();
+			}
+		}
+	}
+}
+
+void CGL::draw_obstacles() { // and floor
+	
+	glMaterialfv( GL_FRONT, GL_AMBIENT, colorDim ); //dim
+	glMaterialfv( GL_FRONT, GL_EMISSION, boardColor );
+	glMaterialfv( GL_FRONT, GL_DIFFUSE, colorDim );
+	glMaterialfv( GL_FRONT, GL_SPECULAR, colorDim );
+	glPushMatrix();
+	glTranslatef( 0.5, -1, 0 );
+	glScalef( board_w, board_h, 0.1 );
+	glutSolidCube( 1 );
+	glPopMatrix();
+	
+	list<Obstacle*> objects = objects_list;
+	list<Obstacle*>::iterator object_it;
+
+	for( object_it = objects.begin(); object_it != objects.end(); object_it++ )
+		(*object_it)->draw();
 }
 
 void CGL::board_to_obstacles( char ** board )
 {
-	Obstacle * object, object2;
-	ExitDoor * exitDoor, *exitDoor2;
+	Obstacle *object;
+	ExitDoor *exitDoor, *exitDoor2;
 
 	float gx, gy;
 	float block_size = 1.0;
@@ -1015,26 +946,32 @@ void CGL::board_to_obstacles( char ** board )
 			case ' ':
 				break;
 			case '#':
-				object = new Obstacle( gx, gy, 0.0f, block_size, block_size, block_size );
-				cgl.objects_list.push_back( object );
+				object = new Block( gx, gy, 0.0f, block_size, block_size, block_size + 0.7f );
+				object->set_texture( wall );
+				objects_list.push_back( object );
 				break;
 			case '^': // Start
-				moveX = gx;
-				moveY = gy;
+				startX = moveX = gx;
+				startY = moveY = gy;
 				break;
 			case '$': // Koniec
+				endX = gx;
+				endY = gy;
 				exitDoor = new ExitDoor( gx, gy, 0.0f );
-				cgl.objects_list.push_back( exitDoor );
+				objects_list.push_back( exitDoor );
 				break;
 			case '&':
 				exitDoor2 = new ExitDoor( gx, gy, 0.0f );
-				cgl.objects_list.push_back( exitDoor2 );
+				objects_list.push_back( exitDoor2 );
 				break;
 			case '@': // Kostka
 				object = new Cube( gx, gy, 0.0f );
 				objects_list.push_front( object );
 				carryableItems_list.push_front( object );
+				break;
 			case '%': // Wie¿yczka :x
+				object = new Turrent( gx, gy, 0.0f );
+				objects_list.push_back( object );
 				break;
 			case 'a': // Przycisk
 				// Je¿eli drzwi bêda wczeœniej w plansz ni¿ przycisk, to wskaŸnik exit nie bêdzie mia³ poprawnej waroœci.
@@ -1056,18 +993,97 @@ void CGL::board_to_obstacles( char ** board )
 			}
 		}
 		// Przycisk inicjalizujemy po petli, ale trzba bedzie ladniej to napisac.
-		object = new Button( buttonX, buttonY, -0.01f, exitDoor );
+		object = new Button( buttonX, buttonY, 0.1f, exitDoor );
 		objects_list.push_back( object );
-		object = new Button( button2X, button2Y, -0.01, exitDoor2 );
+		object = new Button( button2X, button2Y, 0.1f, exitDoor2 );
 		objects_list.push_back( object );
 }
 
-/*
-void info( char * text, int x, int y ) {
-	glMaterialfv( GL_FRONT, GL_DIFFUSE, colorDim );
-	glMaterialfv( GL_FRONT, GL_AMBIENT, colorDim );
-	glMaterialfv( GL_FRONT, GL_EMISSION, colorGray );
-	glMaterialfv( GL_FRONT, GL_SPECULAR, colorDim );
-	CUTIL::renderBitmapString( x, y, GLUT_BITMAP_HELVETICA_18, text );
+void CGL::delete_obstacles() {
+
+	list<Obstacle*> objects = objects_list;
+	list<Obstacle*>::iterator object_it;
+
+	for( object_it = objects.begin(); object_it != objects.end(); object_it++ )
+		delete *object_it;
+	objects_list.clear();
 }
-*/
+
+void CGL::renderHud( int now )
+{	
+	// Tak bardzo C.
+	sprintf( time_s, ":Grasz: %2.2f sekund", (now-time_start)/1000.0f );
+	glMaterialfv( GL_FRONT, GL_AMBIENT, colorDim ); //dim
+	glMaterialfv( GL_FRONT, GL_EMISSION, colorBlue );
+	glMaterialfv( GL_FRONT, GL_DIFFUSE, shadowColor );
+	glMaterialfv( GL_FRONT, GL_SPECULAR, colorDim );
+	drawText(
+		moveX + cos( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f,
+		moveY + sin( ( M_PI * rotateY ) / 180.0f + M_PI/2 ) * 0.3f,
+		1.05f, time_s );
+}
+
+void CGL::renderMenu( int now )
+{
+	camR = M_PI * ( now % 5000 ) / 2500.0f;// - 1.0f;
+	camX = cos( camR ) * 10.0f;
+	camY = sin( camR ) * 10.0f;
+	gluLookAt( camX, camY, 5.0f,
+		0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f );
+	/*glPushMatrix();
+	glTranslatef( camX *0.96f, camY*0.96f, 5.05f );
+	glRotatef( 180*camR/M_PI, 0.0f, 0.0f, 1.0f );
+	glScalef( 0.1f, 2.0f, 1.0f );
+	//glutSolidCube( 0.2f );
+	// Teksturka z menu, czy coœ
+	glPopMatrix();//*/
+	glMaterialfv( GL_FRONT, GL_AMBIENT, colorDim ); //dim
+	glMaterialfv( GL_FRONT, GL_EMISSION, colorBlue );
+	glMaterialfv( GL_FRONT, GL_DIFFUSE, shadowColor );
+	glMaterialfv( GL_FRONT, GL_SPECULAR, colorDim );
+	sprintf( time_s, ":Rekord: %2.2f", best_time );
+	drawText( camX * 0.9, camY * 0.9, 2.4, time_s );
+	drawText( camX * 0.9, camY * 0.9, 2, ":PH" );
+
+	state_list.remove( STATE_MOVE_FORWARD );
+	state_list.remove( STATE_MOVE_BACKWARD );
+	state_list.remove( STATE_MOVE_LEFT );
+	state_list.remove( STATE_MOVE_RIGHT );
+	state_list.remove( STATE_CHANGE_ROTATION_RIGHT );
+	state_list.remove( STATE_CHANGE_ROTATION_LEFT );
+}
+
+void CGL::gameStart()
+{
+	delete_obstacles();
+	board = read_board();
+	board_to_obstacles( board );
+
+	moveX = startX;
+	moveY = startY;
+	rotateY = 0;
+	state_list.push_front( MOVE_CAMERA );
+	state_list.push_back( HUD );
+	state_list.remove( MENU );
+	menu = false;
+	time_start = getTime();
+	//ilosc krokow moze tez?
+	time_play = 0;
+}
+
+void CGL::gameEnd( bool finished )
+{
+	if( menu )
+		return;
+	menu = true;
+	state_list.push_front( MENU );
+	state_list.remove( MOVE_CAMERA );
+	state_list.remove( HUD );
+	if( finished ) {
+		float last = getTime() - time_start;
+		last /= 1000.0f;
+		if( last < best_time || best_time == 0 )
+			best_time = last;
+	}
+}

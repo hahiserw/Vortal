@@ -3,7 +3,7 @@
  * Posiada dodatkowe wlasciwosci
  */
 
-class Cube: public Obstacle
+class Cube: virtual public Obstacle
 {
 	float globalRotation;
 public:
@@ -33,8 +33,13 @@ void Cube::rotationStart( float rotation )
 
 void Cube::draw() const
 {
+	glMaterialfv( GL_FRONT, GL_AMBIENT, colorDim ); //dim
+	glMaterialfv( GL_FRONT, GL_EMISSION, cubeColor );
+	glMaterialfv( GL_FRONT, GL_DIFFUSE, cubeColor );
+	glMaterialfv( GL_FRONT, GL_SPECULAR, colorDim );
+
 	glPushMatrix();
-	glTranslatef( x + length/2.0f, y + width/2.0f, 0.0f ); // Bo skalowanie jest wzgledem srodka
+	glTranslatef( x + length/2.0f, y + width/2.0f, 0.4f ); // Bo skalowanie jest wzgledem srodka
 	//glTranslatef( (float)-width/2.0f, (float)-height/2.0f, 0.0f );
 	glRotatef( globalRotation, 0.0f, 0.0f, 1.0f );
 	glRotatef( rotation, 0.0f, 0.0f, 1.0f );

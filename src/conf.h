@@ -27,7 +27,8 @@ enum {
 	STATE_FIRE,
 	STATE_CARRYING_CUBE,
 	MOVE_CAMERA,
-	MENU
+	MENU,
+	HUD
 };
 
 

@@ -4,13 +4,14 @@
 
 //class ExitDoor;
 
-class Button: public Obstacle
+class Button: virtual public Obstacle
 {
 	bool active;
 	bool blocked;
 	ExitDoor * slave;
 public:
 	Button::Button( float, float, float, ExitDoor * );
+	void draw() const;
 	void activate();
 	void deactivate();
 	bool isActivated();
@@ -39,7 +40,7 @@ void Button::activate()
 	if( active || blocked )
 		return;
 	active = true;
-	z -= 0.1f;
+	z -= 0.09f;
 	slave->activate();
 }
 
@@ -48,7 +49,7 @@ void Button::deactivate()
 	if( !active || blocked )
 		return;
 	active = false;
-	z += 0.1f;
+	z += 0.09f;
 	slave->deactivate();
 }
 
@@ -75,4 +76,23 @@ void Button::blockToggle()
 bool Button::isBlocked()
 {
 	return blocked;
+}
+
+
+void Button::draw() const
+{
+
+	glMaterialfv( GL_FRONT, GL_AMBIENT, colorDim ); //dim
+	glMaterialfv( GL_FRONT, GL_EMISSION, buttonColor );
+	glMaterialfv( GL_FRONT, GL_DIFFUSE, shadowColor );
+	glMaterialfv( GL_FRONT, GL_SPECULAR, colorDim );
+
+	glPushMatrix();
+	glTranslatef( x + length/2.0f, y + width/2.0f, z + height/2.0f ); // Bo skalowanie jest wzgledem srodka
+	//glTranslatef( (float)-width/2.0f, (float)-height/2.0f, 0.0f );
+	//glRotatef( globalRotation, 0.0f, 0.0f, 1.0f );
+	glRotatef( rotation, 0.0f, 0.0f, 1.0f );
+	glScalef( length, width, height );
+	glutSolidCube( 1 );
+	glPopMatrix();
 }

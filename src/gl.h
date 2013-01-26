@@ -4,6 +4,7 @@
 #include <iostream>
 #include <list>
 
+
 using namespace std;
 
 
@@ -17,16 +18,29 @@ stanu OpenGL'a. Przykladem moze byc funkcja display() wywolywana w momencie, gdy
 static float M_PI = 3.14159265358979323846;
 
 static float colorDim[] = {0.01f,0.01f,0.01f};
-static float colorWhite[] = {0.9f,0.9f,0.9f};
+static float colorWhite[] = {0.78f,0.78f,0.8f};
 static float colorGreen[] = {0.01f,0.7f,0.01f};
+static float colorBlue[] = {0.2f,0.2f,0.55f};
 static float colorGray[] = {0.4f,0.4f,0.4f};
 static float colorBlack[] = { 0.0f, 0.0f, 0.0f };
+static float boardColor[] = { 0.6f, 0.6f, 0.7f };
+static float playerColor[] = { 0.0, 0.0, 0.0 };
+static float lightColor[] = { 0.9, 0.9, 0.9 };
+static float shadowColor[] = { 0.2, 0.2, 0.2 };
+static float cubeColor[] = { 0.4, 0.4, 0.5 };
+static float buttonColor[] = { 0.6, 0.2, 0.2 };
+static float doorColor[] = { 0.1, 0.5, 0.3 };
+static float turrentColor[] = { 0.5, 0.3, 0.1 };
+static float shootColor[] = { 0.7, 0.1, 0.1 };
 
 class Obstacle;
 class Cube;
 class Shoot;
 class ExitDoor;
 class Button;
+class Block;
+class Portal;
+class Turrent;
 
 class CGL {
 
@@ -40,6 +54,10 @@ public:
 	
 	Obstacle *closeItem;
 	Obstacle *obstacle;
+
+	Portal *portalA, *portalB;
+
+	unsigned int wall;
 
 	int board_w;
 	int board_h;
@@ -56,6 +74,9 @@ public:
 	float moveF_time_end;
 	float moveS_time_start;
 	float moveS_time_end;
+
+	float fire_time_start;
+	float fire_time_end;
 	
 	float moveY_start, moveY_value, moveY_change;
 	float moveX_start, moveX_value, moveX_change;
@@ -63,6 +84,8 @@ public:
 
 	float carry_time_start;
 	float carry_time_end;
+
+	float best_time;
 	
 	/** Obs³uga myszy */
 	float translateX;
@@ -88,6 +111,13 @@ public:
 	bool collision;
 	bool collisionX;
 	bool collisionY;
+	
+	float startX, startY;
+	float endX, endY;
+
+	char time_s[100];
+
+	float time_play, time_start;
 
 	float camX, camY, camR;
 
@@ -108,7 +138,14 @@ private:
 public:
 
 	CGL() {
-		
+
+		portalA = NULL;
+		portalB = NULL;
+
+		time_play = 0;
+		time_start = 0;
+		best_time = 0;
+
 		state_list.clear();
 		objects_list.clear();
 		carryableItems_list.clear();
@@ -129,13 +166,14 @@ public:
 		flag_phong = false;
 		cameraX = 0.0f;
 
+
 		//@ Inicjujemy nasze zmienne :D
 		headX = 0;
 		carrying = false;
 		moveX = 0;
 		moveY = 0;
-		playerW = 0.5;
-		playerH = 0.5;
+		playerW = 0.4;
+		playerH = 0.4;
 		range = 5;
 		move = false;
 		collision = false;
@@ -151,7 +189,6 @@ public:
 		
 		
 	}
-	bool getM() { return menu; }
 
 	/** Inicjalizacja srodowiska graficznego: wczytanie tekstury, ustawienie kamery i swiatel, wczytanie obiektu ASE. Inicjalizacja
 		odbywa sie tylko raz po uruchomieniu programu.
@@ -166,15 +203,18 @@ public:
 	*/
 	void draw_clown( float headX );
 	void move_head( void );
-	void draw_cube( void );
-	void draw_cube( float angle );
 	void draw_teapot( float angle );
 	void draw_cube_texture( float angle );
-	void create_obstacle( float, float, float, float );
+
 	void draw_obstacles();
 	void board_to_obstacles( char ** );
-	void fire( float );
 	void moveCarryingItem();
+	void drawText( float, float, float, char * );
+	void gameEnd( bool );
+	void gameStart();
+	void renderMenu( int );
+	void renderHud( int );
+	void delete_obstacles();
 
 	//void info( char *, int, int );
 
@@ -182,10 +222,6 @@ public:
 	 */
 	char** read_board( void );
 	
-	/** Rysowanie planszy gry
-	 */
-	void draw_board( void );
-
 
 	/** Funkcja wywolywana w przypadku braku aktywnosci innych elementow programu (obecnie funkcja nie jest wykorzystywana). 
 	*/

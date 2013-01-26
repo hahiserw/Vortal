@@ -1,6 +1,6 @@
 13,10
 ###$#########
-#  @  #  @  #
+#  @  #   @ #
 #     #     #
 ###&###     #
 #           #
@@ -9,13 +9,12 @@
 #     ^   a #
 #           #
 #############
-1
-$:ab
+
 
 'a' otwiera drzwi '$'
 'b' otwiera drzwi '&'
+'%' turrent
 
-czas
-kilka świateł
+
 attenuation
 tekstury, modele

@@ -50,8 +50,9 @@ int main(int argc, char* argv[]) {
 	glutInit(&argc, argv);
  	glutInitWindowSize(768,768); // Tu sobie ustalamy rozmiar okna
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA); 
-	glutInitWindowPosition( 1440-768-10, 10 );
-	glutCreateWindow("Lol Game");	
+	//glutInitWindowPosition( 1440-768-10, 10 );
+	glutInitWindowPosition( 10, 10 );
+	glutCreateWindow("Vortal");	
 
 	glutDisplayFunc(display);
 	glutIdleFunc(idle);
@@ -77,17 +78,17 @@ int main(int argc, char* argv[]) {
 	
 	//cgl.state_list.push_back( MOVE_CAMERA );
 	//cgl.state_list.push_back( STATE_DRAW_BOARD );
-	
+		
 	cgl.state_list.push_back( STATE_DRAW_OBSTACLES );
 	//@ Odpalamy stan zmiany zmiennej
 	//cgl.state_list.push_back( STATE_MOVE_HEAD );
 	// rysowanie szescianu
 	//cgl.state_list.push_back( STATE_DRAW_CUBE );
-	cgl.state_list.push_back( STATE_DRAW_TEAPOT );
-	//cgl.state_list.push_back( STATE_DRAW_CLOWN );
+	//cgl.state_list.push_back( STATE_DRAW_TEAPOT );
+	cgl.state_list.push_back( STATE_DRAW_CLOWN );
 	
 	// cieniowanie phonga
-	//cgl.state_list.push_back(STATE_SCENE_LIGHT);	
+	//cgl.state_list.push_back(STATE_SCENE_LIGHT);
 	
 	glutMainLoop();
 
